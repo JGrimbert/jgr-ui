@@ -32,8 +32,6 @@
     background: var(--bg-base);
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    height: 100vh;
-    overflow: hidden;
   }
   :global(pre), :global(code), :global(.monospace) {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;

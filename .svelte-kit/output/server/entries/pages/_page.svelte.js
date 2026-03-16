@@ -1,17 +1,14 @@
-import { F as FILENAME } from "../../chunks/validate.js";
 import "clsx";
-import "../../chunks/client.js";
-_page[FILENAME] = "src/routes/+page.svelte";
+import "@sveltejs/kit/internal";
+import "../../chunks/exports.js";
+import "../../chunks/utils.js";
+import "@sveltejs/kit/internal/server";
+import "../../chunks/root.js";
+import "../../chunks/state.svelte.js";
 function _page($$renderer, $$props) {
-  $$renderer.component(
-    ($$renderer2) => {
-    },
-    _page
-  );
+  $$renderer.component(($$renderer2) => {
+  });
 }
-_page.render = function() {
-  throw new Error("Component.render(...) is no longer valid in Svelte 5. See https://svelte.dev/docs/svelte/v5-migration-guide#Components-are-no-longer-classes for more information");
-};
 export {
   _page as default
 };

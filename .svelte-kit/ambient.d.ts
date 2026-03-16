@@ -39,6 +39,7 @@
  */
 declare module '$env/static/private' {
 	export const ALLUSERSPROFILE: string;
+	export const ANTHROPIC_API_KEY: string;
 	export const APPDATA: string;
 	export const ChocolateyInstall: string;
 	export const ChocolateyLastPathUpdate: string;
@@ -54,23 +55,12 @@ declare module '$env/static/private' {
 	export const CUDA_PATH_V12_8: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_19496_1262719628: string;
-	export const EFC_19496_1592913036: string;
-	export const EFC_19496_2283032206: string;
-	export const EFC_19496_2775293581: string;
-	export const EFC_19496_3789132940: string;
 	export const EXEPATH: string;
-	export const GITHUB_APP_ID: string;
-	export const GITHUB_INSTALLATION_ID: string;
-	export const GITHUB_PRIVATE_KEY_PATH: string;
-	export const GITHUB_TOKEN: string;
 	export const GIT_EDITOR: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
-	export const IDEA_INITIAL_DIRECTORY: string;
 	export const INIT_CWD: string;
-	export const LC_PROJECT_PATH: string;
 	export const LOCALAPPDATA: string;
 	export const LOGONSERVER: string;
 	export const MSYSTEM: string;
@@ -79,7 +69,6 @@ declare module '$env/static/private' {
 	export const NODE_ENV: string;
 	export const npm_command: string;
 	export const npm_config_cache: string;
-	export const npm_config_engine_strict: string;
 	export const npm_config_globalconfig: string;
 	export const npm_config_global_prefix: string;
 	export const npm_config_init_module: string;
@@ -127,13 +116,8 @@ declare module '$env/static/private' {
 	export const SHLVL: string;
 	export const SYSTEMDRIVE: string;
 	export const SYSTEMROOT: string;
-	export const TARGET_OWNER: string;
-	export const TARGET_PROJECT_PATH: string;
-	export const TARGET_REPO: string;
 	export const TEMP: string;
 	export const TERM: string;
-	export const TERMINAL_EMULATOR: string;
-	export const TERM_SESSION_ID: string;
 	export const TMP: string;
 	export const USERDOMAIN: string;
 	export const USERDOMAIN_ROAMINGPROFILE: string;
@@ -141,9 +125,11 @@ declare module '$env/static/private' {
 	export const USERPROFILE: string;
 	export const VS140COMNTOOLS: string;
 	export const WINDIR: string;
+	export const WSLENV: string;
+	export const WT_PROFILE_ID: string;
+	export const WT_SESSION: string;
 	export const ZES_ENABLE_SYSMAN: string;
 	export const _: string;
-	export const __INTELLIJ_COMMAND_HISTFILE__: string;
 }
 
 /**
@@ -231,6 +217,7 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		ALLUSERSPROFILE: string;
+		ANTHROPIC_API_KEY: string;
 		APPDATA: string;
 		ChocolateyInstall: string;
 		ChocolateyLastPathUpdate: string;
@@ -246,23 +233,12 @@ declare module '$env/dynamic/private' {
 		CUDA_PATH_V12_8: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_19496_1262719628: string;
-		EFC_19496_1592913036: string;
-		EFC_19496_2283032206: string;
-		EFC_19496_2775293581: string;
-		EFC_19496_3789132940: string;
 		EXEPATH: string;
-		GITHUB_APP_ID: string;
-		GITHUB_INSTALLATION_ID: string;
-		GITHUB_PRIVATE_KEY_PATH: string;
-		GITHUB_TOKEN: string;
 		GIT_EDITOR: string;
 		HOME: string;
 		HOMEDRIVE: string;
 		HOMEPATH: string;
-		IDEA_INITIAL_DIRECTORY: string;
 		INIT_CWD: string;
-		LC_PROJECT_PATH: string;
 		LOCALAPPDATA: string;
 		LOGONSERVER: string;
 		MSYSTEM: string;
@@ -271,7 +247,6 @@ declare module '$env/dynamic/private' {
 		NODE_ENV: string;
 		npm_command: string;
 		npm_config_cache: string;
-		npm_config_engine_strict: string;
 		npm_config_globalconfig: string;
 		npm_config_global_prefix: string;
 		npm_config_init_module: string;
@@ -319,13 +294,8 @@ declare module '$env/dynamic/private' {
 		SHLVL: string;
 		SYSTEMDRIVE: string;
 		SYSTEMROOT: string;
-		TARGET_OWNER: string;
-		TARGET_PROJECT_PATH: string;
-		TARGET_REPO: string;
 		TEMP: string;
 		TERM: string;
-		TERMINAL_EMULATOR: string;
-		TERM_SESSION_ID: string;
 		TMP: string;
 		USERDOMAIN: string;
 		USERDOMAIN_ROAMINGPROFILE: string;
@@ -333,9 +303,11 @@ declare module '$env/dynamic/private' {
 		USERPROFILE: string;
 		VS140COMNTOOLS: string;
 		WINDIR: string;
+		WSLENV: string;
+		WT_PROFILE_ID: string;
+		WT_SESSION: string;
 		ZES_ENABLE_SYSMAN: string;
 		_: string;
-		__INTELLIJ_COMMAND_HISTFILE__: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

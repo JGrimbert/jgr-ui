@@ -88,7 +88,7 @@
 }
 .item-title {
   color: #bbb;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   line-height: 1.3;
 }
 .item-action {

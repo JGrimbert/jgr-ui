@@ -14,13 +14,6 @@ function reset() {
 function set_assets(path) {
   assets = initial.assets = path;
 }
-let public_env = {};
-let fix_stack_trace = (error) => error?.stack;
-function set_private_env(environment) {
-}
-function set_public_env(environment) {
-  public_env = environment;
-}
 let prerendering = false;
 function set_building() {
 }
@@ -32,14 +25,10 @@ export {
   base as b,
   app_dir as c,
   reset as d,
-  set_public_env as e,
-  set_assets as f,
-  set_building as g,
-  set_prerendering as h,
-  prerendering as i,
-  fix_stack_trace as j,
+  set_building as e,
+  set_prerendering as f,
   override as o,
-  public_env as p,
+  prerendering as p,
   relative as r,
-  set_private_env as s
+  set_assets as s
 };

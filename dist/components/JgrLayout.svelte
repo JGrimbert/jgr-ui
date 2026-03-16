@@ -195,7 +195,7 @@
   align-items: center;
   padding: 8px 0;
   gap: 4px;
-  background: #111;
+  background: var(--bg-panel);
   z-index: 10;
 }
 .panel-strip button {
@@ -207,7 +207,7 @@
   align-items: center;
   justify-content: center;
 }
-.panel-strip button:hover { background: #1e1e1e; }
+.panel-strip button:hover { background: var(--bg-subtle); }
 .strip-label {
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -215,10 +215,10 @@
   font-size: 9px;
   letter-spacing: 0.5px;
   white-space: nowrap;
-  color: #555;
+  color: var(--text-dim, #333);
   font-family: 'JetBrains Mono', monospace;
 }
-.panel-strip button.active .strip-label { color: #e1cfbd; font-weight: 400; }
-.panel-strip--left  { border-right: 1px solid #1e1e1e; }
-.panel-strip--right { border-left: 1px solid #1e1e1e; }
+.panel-strip button.active .strip-label { color: var(--text-muted); }
+.panel-strip--left  { border-right: 1px solid var(--border); }
+.panel-strip--right { border-left:  1px solid var(--border); }
 </style>
