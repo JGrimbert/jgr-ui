@@ -6,6 +6,9 @@
     storageKey = 'jgr-ui:panel-widths',
     leftWidth = 300,
     rightWidth = 340,
+    height = '100vh',
+    leftLabel = 'GAUCHE',
+    rightLabel = 'DROITE',
     topbar,
     left,
     center,
@@ -15,6 +18,9 @@
     storageKey?: string;
     leftWidth?: number;
     rightWidth?: number;
+    height?: string;
+    leftLabel?: string;
+    rightLabel?: string;
     topbar?: Snippet;
     left?: Snippet;
     center?: Snippet;
@@ -89,7 +95,7 @@
 
 <svelte:window onmousemove={onMove} onmouseup={onUp} />
 
-<div class="layout" class:dragging={!!dragging}>
+<div class="layout" class:dragging={!!dragging} style="height: {height}">
   {#if topbar}
     <div class="layout-topbar">{@render topbar()}</div>
   {/if}
@@ -98,7 +104,7 @@
     <!-- Strip gauche -->
     <div class="panel-strip panel-strip--left">
       <button class:active={!collapsed.left} onclick={() => toggleCollapse('left')}>
-        <span class="strip-label">GAUCHE</span>
+        <span class="strip-label">{leftLabel}</span>
       </button>
     </div>
 
@@ -135,7 +141,7 @@
     <!-- Strip droite -->
     <div class="panel-strip panel-strip--right">
       <button class:active={!collapsed.right} onclick={() => toggleCollapse('right')}>
-        <span class="strip-label">DROITE</span>
+        <span class="strip-label">{rightLabel}</span>
       </button>
     </div>
   </div>
@@ -149,7 +155,6 @@
 .layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
 }
 .layout.dragging { user-select: none; cursor: col-resize; }
 .layout-topbar { flex-shrink: 0; }

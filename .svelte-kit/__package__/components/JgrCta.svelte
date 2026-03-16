@@ -37,7 +37,7 @@
   {onclick}
 >
   {#if pending}<span class="cta-spin">{FRAMES[spinFrame]}</span>{/if}
-  <span class="cta-label">{label}</span><span class="cta-arrow"> →</span>
+  <span class="cta-label">{label}</span><span class="cta-arrow">→</span>
 </button>
 
 <style>
@@ -72,7 +72,8 @@
 .cta-label { color: var(--color-impl, #7c6af7); }
 .cta-btn.ghost .cta-label { color: var(--text-secondary); }
 .cta-btn.danger .cta-label { color: #e07070; }
-.cta-arrow { color: #fff; }
+.cta-arrow { color: #fff; margin-left: 0.35em; }
+.cta-btn.danger .cta-arrow { color: #e07070; }
 .cta-btn:hover:not(:disabled) { background: #2a1e58; border-color: #5a4a9a; }
 .cta-btn.ghost:hover:not(:disabled) { background: var(--bg-subtle); }
 .cta-btn.danger:hover:not(:disabled) { background: #280a0a; border-color: #8a3a3a; }

@@ -7,6 +7,8 @@
     leftWidth = 300,
     rightWidth = 340,
     height = '100vh',
+    leftLabel = 'GAUCHE',
+    rightLabel = 'DROITE',
     topbar,
     left,
     center,
@@ -17,6 +19,8 @@
     leftWidth?: number;
     rightWidth?: number;
     height?: string;
+    leftLabel?: string;
+    rightLabel?: string;
     topbar?: Snippet;
     left?: Snippet;
     center?: Snippet;
@@ -100,7 +104,7 @@
     <!-- Strip gauche -->
     <div class="panel-strip panel-strip--left">
       <button class:active={!collapsed.left} onclick={() => toggleCollapse('left')}>
-        <span class="strip-label">GAUCHE</span>
+        <span class="strip-label">{leftLabel}</span>
       </button>
     </div>
 
@@ -137,7 +141,7 @@
     <!-- Strip droite -->
     <div class="panel-strip panel-strip--right">
       <button class:active={!collapsed.right} onclick={() => toggleCollapse('right')}>
-        <span class="strip-label">DROITE</span>
+        <span class="strip-label">{rightLabel}</span>
       </button>
     </div>
   </div>

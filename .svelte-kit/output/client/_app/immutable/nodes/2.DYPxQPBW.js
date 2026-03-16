@@ -1,0 +1,1 @@
+import{c as t,l as e}from"../chunks/j6JZjGrl.js";import{i as s}from"../chunks/qNAjFW5F.js";import{p,o as m,a as n,F as i}from"../chunks/_3nBd531.js";import{g as c}from"../chunks/B6nYz25w.js";o[i]="src/routes/+page.svelte";function o(g,a){t(new.target),p(a,!1,o),m(()=>c("/demo"));var r={...e()};return s(),n(r)}export{o as component};

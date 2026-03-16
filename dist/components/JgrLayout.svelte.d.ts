@@ -3,6 +3,9 @@ type $$ComponentProps = {
     storageKey?: string;
     leftWidth?: number;
     rightWidth?: number;
+    height?: string;
+    leftLabel?: string;
+    rightLabel?: string;
     topbar?: Snippet;
     left?: Snippet;
     center?: Snippet;

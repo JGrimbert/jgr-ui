@@ -3,6 +3,7 @@ import { SvelteKitError, HttpError } from "@sveltejs/kit/internal";
 import { with_request_store } from "@sveltejs/kit/internal/server";
 import * as devalue from "devalue";
 import { t as text_decoder, b as base64_encode, c as base64_decode } from "./utils.js";
+import { j as fix_stack_trace } from "./environment.js";
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
 const ENDPOINT_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"];
 const MUTATIVE_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
@@ -305,7 +306,7 @@ function split_path(path) {
 function check_prototype_pollution(key) {
   if (key === "__proto__" || key === "constructor" || key === "prototype") {
     throw new Error(
-      `Invalid key "${key}"`
+      `Invalid key "${key}": This key is not allowed to prevent prototype pollution.`
     );
   }
 }
@@ -432,6 +433,11 @@ function create_field_proxy(target, get_input, set_input, get_issues, path = [])
             base_props.type = type === "file multiple" ? "file" : type;
           }
           if (type === "submit" || type === "hidden") {
+            {
+              if (!input_value) {
+                throw new Error(`\`${type}\` inputs must have a value`);
+              }
+            }
             return Object.defineProperties(base_props, {
               value: { value: input_value, enumerable: true }
             });
@@ -448,6 +454,14 @@ function create_field_proxy(target, get_input, set_input, get_issues, path = [])
             });
           }
           if (type === "checkbox" || type === "radio") {
+            {
+              if (type === "radio" && !input_value) {
+                throw new Error("Radio inputs must have a value");
+              }
+              if (type === "checkbox" && is_array && !input_value) {
+                throw new Error("Checkbox array inputs must have a value");
+              }
+            }
             return Object.defineProperties(base_props, {
               value: { value: input_value ?? "on", enumerable: true },
               checked: {
@@ -523,6 +537,36 @@ function build_path_string(path) {
     }
   }
   return result;
+}
+function throw_on_old_property_access(instance) {
+  Object.defineProperty(instance, "field", {
+    value: (name) => {
+      const new_name = name.endsWith("[]") ? name.slice(0, -2) : name;
+      throw new Error(
+        `\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
+      );
+    }
+  });
+  for (const property of ["input", "issues"]) {
+    Object.defineProperty(instance, property, {
+      get() {
+        const new_name = property === "issues" ? "issues" : "value";
+        return new Proxy(
+          {},
+          {
+            get(_, prop) {
+              const prop_string = typeof prop === "string" ? prop : String(prop);
+              const old = prop_string.includes("[") || prop_string.includes(".") ? `['${prop_string}']` : `.${prop_string}`;
+              const replacement = `.${prop_string}.${new_name}()`;
+              throw new Error(
+                `\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
+              );
+            }
+          }
+        );
+      }
+    });
+  }
 }
 function negotiate(accept, types) {
   const parts = [];
@@ -643,10 +687,13 @@ function allowed_methods(mod) {
   return allowed;
 }
 function get_global_name(options) {
-  return `__sveltekit_${options.version_hash}`;
+  return "__sveltekit_dev";
 }
 function static_error_page(options, status, message) {
   let page = options.templates.error({ status, message: escape_html(message) });
+  {
+    page = page.replace("</head>", '<script type="module" src="/@vite/client"><\/script></head>');
+  }
   return text(page, {
     headers: { "content-type": "text/html; charset=utf-8" },
     status
@@ -670,6 +717,9 @@ async function handle_fatal_error(event, state, options, error) {
 async function handle_error_and_jsonify(event, state, options, error) {
   if (error instanceof HttpError) {
     return { message: "Unknown Error", ...error.body };
+  }
+  if (typeof error == "object") {
+    fix_stack_trace(error);
   }
   const status = get_status(error);
   const message = get_message(error);
@@ -720,7 +770,26 @@ function format_server_error(status, error, event) {
     return formatted_text;
   }
   return `${formatted_text}
-${error.stack}`;
+${clean_up_stack_trace(error)}`;
+}
+let relative = (file) => file;
+{
+  try {
+    const path = await import("node:path");
+    const process = await import("node:process");
+    relative = (file) => path.relative(process.cwd(), file);
+  } catch {
+  }
+}
+function clean_up_stack_trace(error) {
+  const stack_trace = (error.stack?.split("\n") ?? []).map((line) => {
+    return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
+  });
+  const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
+  if (last_line_from_src_code === -1) {
+    return error.stack;
+  }
+  return stack_trace.slice(0, last_line_from_src_code + 1).join("\n");
 }
 function get_node_type(node_id) {
   const parts = node_id?.split("/");
@@ -729,8 +798,23 @@ function get_node_type(node_id) {
   const dot_parts = filename.split(".");
   return dot_parts.slice(0, -1).join(".");
 }
+function validate_depends(route_id, dep) {
+  const match = /^(moz-icon|view-source|jar):/.exec(dep);
+  if (match) {
+    console.warn(
+      `${route_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
+    );
+  }
+}
 const INVALIDATED_PARAM = "x-sveltekit-invalidated";
 const TRAILING_SLASH_PARAM = "x-sveltekit-trailing-slash";
+function validate_load_response(data, location_description) {
+  if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+    throw new Error(
+      `a load function ${location_description} returned ${typeof data !== "object" ? `a ${typeof data}` : data instanceof Response ? "a Response object" : Array.isArray(data) ? "an array" : "a non-plain object"}, but must return a plain object at the top level (i.e. \`return {...}\`)`
+    );
+  }
+}
 function stringify(data, transport) {
   const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
   return devalue.stringify(data, encoders);
@@ -754,6 +838,9 @@ function create_remote_key(id, payload) {
   return id + "/" + payload;
 }
 export {
+  set_nested_value as A,
+  flatten_issues as B,
+  deep_set as C,
   ENDPOINT_METHODS as E,
   INVALIDATED_PARAM as I,
   MUTATIVE_METHODS as M,
@@ -764,26 +851,26 @@ export {
   get_global_name as b,
   clarify_devalue_error as c,
   get_node_type as d,
-  escape_html as e,
-  create_remote_key as f,
+  validate_load_response as e,
+  escape_html as f,
   get_status as g,
   handle_error_and_jsonify as h,
   is_form_content_type as i,
-  static_error_page as j,
-  stringify as k,
-  deserialize_binary_form as l,
+  create_remote_key as j,
+  static_error_page as k,
+  stringify as l,
   method_not_allowed as m,
   negotiate as n,
-  has_prerendered_path as o,
+  deserialize_binary_form as o,
   parse_remote_arg as p,
-  handle_fatal_error as q,
+  has_prerendered_path as q,
   redirect_response as r,
   serialize_uses as s,
-  format_server_error as t,
-  stringify_remote_arg as u,
-  create_field_proxy as v,
-  normalize_issue as w,
-  set_nested_value as x,
-  flatten_issues as y,
-  deep_set as z
+  handle_fatal_error as t,
+  format_server_error as u,
+  validate_depends as v,
+  stringify_remote_arg as w,
+  create_field_proxy as x,
+  throw_on_old_property_access as y,
+  normalize_issue as z
 };
