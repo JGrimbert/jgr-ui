@@ -136,46 +136,6 @@
     }
   }
 
-  function dominantSkill(steps: RoadmapStep[]): string {
-    const counts: Record<string, number> = {};
-    for (const s of steps) counts[s.skill] = (counts[s.skill] ?? 0) + 1;
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'internal';
-  }
-
-  function stepKey(step: RoadmapStep, depth: number): string {
-    const file = step.files?.[0];
-    if (file) {
-      const parts = file.replace(/\\/g, '/').split('/')
-        .filter(p => p && !p.startsWith('+') && !p.includes('.'));
-      const idx = parts.length - 1 - depth;
-      if (idx >= 0) return parts[idx];
-      if (parts.length > 0) return parts[parts.length - 1];
-    }
-    return step.label.split(': ')[1] || step.label || 'misc';
-  }
-
-  // depth 0 = étapes (concept/fichier), 1 = dossiers, 2 = domaines (skill)
-  function buildStackItems(steps: RoadmapStep[], depth: number): ListItem[] {
-    const groups = new Map<string, RoadmapStep[]>();
-    for (const step of steps) {
-      const k = depth === 0
-        ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
-        : depth === 1
-          ? stepKey(step, 1)
-          : (step.skill || 'internal');
-      if (!groups.has(k)) groups.set(k, []);
-      groups.get(k)!.push(step);
-    }
-    return [...groups.entries()]
-      .sort((a, b) => Math.min(...a[1].map(s => s.id)) - Math.min(...b[1].map(s => s.id)))
-      .map(([key, ss]) => ({
-        id: `stack-${depth}-${key}`,
-        label: key,
-        prefix: String(ss.length),
-        labels: [{ name: dominantSkill(ss), color: SKILL_COLOR[dominantSkill(ss)] ?? '555566' }],
-      }));
-  }
-
   const tabs: TabDef[] = $derived.by(() => {
     const allSteps = roadmap?.steps ?? [];
     // Même filtre que le visualizer : si des steps ont des issues, on n'affiche que ceux-là
