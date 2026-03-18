@@ -50,6 +50,7 @@
   } = $props();
 
   let activeTab = $state('tasks');
+  let selectedItemId: string | null = $state(null);
 
   function dominantSkill(steps: RoadmapStep[]): string {
     const counts: Record<string, number> = {};
@@ -91,17 +92,64 @@
       }));
   }
 
+  // Map itemId → stepIds pour postMessage vers l'iframe
+  const itemSteps = $derived.by(() => {
+    const allSteps = roadmap?.steps ?? [];
+    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
+    const steps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
+    const map = new Map<string, number[]>();
+
+    steps.filter(s => (s.issues?.length ?? 0) > 0)
+      .forEach(s => s.issues!.forEach(n => map.set(`task-${s.id}-${n}`, [s.id])));
+
+    steps.forEach(s => map.set(String(s.id), [s.id]));
+
+    for (const depth of [0, 1, 2] as const) {
+      const groups = new Map<string, RoadmapStep[]>();
+      for (const step of steps) {
+        const k = depth === 0
+          ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
+          : depth === 1 ? stepKey(step, 1)
+          : (step.skill || 'internal');
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k)!.push(step);
+      }
+      for (const [key, ss] of groups) {
+        map.set(`stack-${depth}-${key}`, ss.map(s => s.id));
+      }
+    }
+    return map;
+  });
+
+  function sendCmd(msg: { type: string; ids?: number[] }) {
+    try { localStorage.setItem('roadmap-cmd', JSON.stringify({ ...msg, ts: Date.now() })); } catch { /* ignore */ }
+  }
+
+  function handleSelect(_tabId: string, item: ListItem) {
+    if (selectedItemId === item.id) {
+      selectedItemId = null;
+      sendCmd({ type: 'deactivate' });
+    } else {
+      selectedItemId = item.id;
+      const ids = itemSteps.get(item.id) ?? [];
+      sendCmd({ type: 'activate', ids });
+    }
+  }
+
   const tabs: TabDef[] = $derived.by(() => {
-    const steps = roadmap?.steps ?? [];
+    const allSteps = roadmap?.steps ?? [];
+    // Même filtre que le visualizer : si des steps ont des issues, on n'affiche que ceux-là
+    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
+    const steps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
 
     const taskItems: ListItem[] = steps
       .filter(s => (s.issues?.length ?? 0) > 0)
-      .map(s => ({
-        id: String(s.id),
+      .flatMap(s => s.issues!.map(n => ({
+        id: `task-${s.id}-${n}`,
         label: s.label,
-        prefix: s.issues!.map(n => `#${n}`).join(' '),
+        prefix: `#${n}`,
         labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
-      }));
+      })));
 
     const stepItems: ListItem[] = steps.map(s => ({
       id: String(s.id),
@@ -117,6 +165,17 @@
       { id: 'dossiers', label: 'Dossiers', items: buildStackItems(steps, 1),   empty: 'Aucune donnée' },
       { id: 'domaines', label: 'Domaines', items: buildStackItems(steps, 2),   empty: 'Aucune donnée' },
     ];
+  });
+
+  const tabsWithSelection: TabDef[] = $derived(
+    tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
+  );
+
+  // Quand l'onglet change : réinitialiser la sélection dans le graphe
+  $effect(() => {
+    activeTab; // dépendance réactive
+    selectedItemId = null;
+    sendCmd({ type: 'deactivate' });
   });
 </script>
 
@@ -174,9 +233,10 @@
 
     {#snippet right()}
       <JgrTabList
-        {tabs}
+        tabs={tabsWithSelection}
         {activeTab}
         ontabchange={id => activeTab = id}
+        onselect={handleSelect}
       />
     {/snippet}
   </JgrLayout>
