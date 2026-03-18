@@ -222,7 +222,7 @@
   overflow-y: auto;
   transition: opacity 0.15s;
 }
-.tl-list::-webkit-scrollbar { width: 4px; }
+.tl-list::-webkit-scrollbar { width: 4px; height: 4px; }
 .tl-list::-webkit-scrollbar-track { background: transparent; }
 .tl-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .tl-list::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }

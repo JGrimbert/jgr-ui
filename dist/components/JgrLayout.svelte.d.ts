@@ -6,6 +6,7 @@ type $$ComponentProps = {
     height?: string;
     leftLabel?: string;
     rightLabel?: string;
+    showStrips?: boolean;
     topbar?: Snippet;
     left?: Snippet;
     center?: Snippet;

@@ -1,0 +1,58 @@
+{
+  "generated": "2026-03-18T11:04:23.164Z",
+  "stats": {
+    "nodes": 2,
+    "edges": 1,
+    "levels": 2,
+    "steps": 2,
+    "cycles": 0
+  },
+  "steps": [
+    {
+      "id": 1,
+      "label": "Internal: ?",
+      "skill": "internal",
+      "nodes": [
+        "./$types"
+      ],
+      "files": [],
+      "rationale": "Foundational — no dependencies",
+      "dependsOnSteps": [],
+      "canParallelWith": [],
+      "isSpine": true,
+      "concept": null,
+      "pattern": null
+    },
+    {
+      "id": 2,
+      "label": "Internal: ?",
+      "skill": "internal",
+      "nodes": [
+        "src/routes/api/roadmap-viz/+server.ts"
+      ],
+      "files": [],
+      "rationale": "Depends on 1 prior step",
+      "dependsOnSteps": [
+        1
+      ],
+      "canParallelWith": [],
+      "isSpine": true,
+      "concept": null,
+      "pattern": null
+    }
+  ],
+  "spine": [
+    "./$types",
+    "src/routes/api/roadmap-viz/+server.ts"
+  ],
+  "concepts": [],
+  "patterns": {
+    "factories": [],
+    "repositories": [],
+    "adapters": []
+  },
+  "pipelines": [],
+  "coalNodes": [],
+  "project": "jgr-ui",
+  "root": "C:/jgr-ui"
+}

@@ -7,6 +7,8 @@ export { default as JgrItem } from './components/JgrItem.svelte';
 export { default as JgrPrompt } from './components/JgrPrompt.svelte';
 export { default as JgrConsole } from './components/JgrConsole.svelte';
 export { default as JgrTabList } from './components/JgrTabList.svelte';
+export { default as JgrRoadmap } from './components/JgrRoadmap.svelte';
 export type { LogEntry } from './components/JgrConsole.svelte';
 export type { PromptSection } from './components/JgrPrompt.svelte';
 export type { ListItem, TabDef } from './components/JgrTabList.svelte';
+export type { RoadmapStep, RoadmapData } from './components/JgrRoadmap.svelte';
