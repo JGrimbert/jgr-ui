@@ -6,7 +6,9 @@
   import JgrPrompt from '$lib/components/JgrPrompt.svelte';
   import JgrLayout from '$lib/components/JgrLayout.svelte';
   import JgrTabList from '$lib/components/JgrTabList.svelte';
+  import JgrRoadmap from '$lib/components/JgrRoadmap.svelte';
   import type { TabDef, ListItem } from '$lib/components/JgrTabList.svelte';
+  import type { RoadmapData } from '$lib/components/JgrRoadmap.svelte';
   import type { LogEntry } from '$lib/components/JgrConsole.svelte';
 
   // ── JgrCta ──────────────────────────────────────────────────────────────────
@@ -184,6 +186,32 @@
     { label: 'CI',      value: '✓ passing',                color: '#4caf50' },
     { label: 'Tokens',  value: '18.4k / 200k',             color: '#888'    },
   ];
+
+  // ── JgrRoadmap — données mock ─────────────────────────────────────────────────
+  const mockRoadmap: RoadmapData = {
+    steps: [
+      { id: 1, label: 'domain: AuthService',     skill: 'domain',      nodes: ['AuthService', 'TokenManager'], files: ['src/auth/service.ts'], rationale: 'Authentification centrale', dependsOnSteps: [], isSpine: true, issues: [12, 14], concept: 'auth' },
+      { id: 2, label: 'api: UserController',      skill: 'api',         nodes: ['UserController'], files: ['src/api/users.ts'], rationale: 'API REST utilisateurs', dependsOnSteps: [1], issues: [12], concept: 'users' },
+      { id: 3, label: 'flow: SessionMiddleware',  skill: 'flow',        nodes: ['SessionMiddleware'], files: ['src/middleware/session.ts'], rationale: 'Propagation session', dependsOnSteps: [1], isSpine: true, concept: 'auth' },
+      { id: 4, label: 'utility: TokenHelper',    skill: 'utility',     nodes: ['TokenHelper'], files: ['src/utils/token.ts'], rationale: 'Helpers JWT', dependsOnSteps: [1], issues: [14] },
+      { id: 5, label: 'integration: GithubOAuth', skill: 'integration', nodes: ['GithubOAuth'], files: ['src/oauth/github.ts'], rationale: 'OAuth GitHub', dependsOnSteps: [3], isSpine: true, issues: [12], concept: 'oauth' },
+    ],
+    spine: ['AuthService', 'SessionMiddleware', 'GithubOAuth'],
+    stats: { nodes: 47, edges: 32, levels: 4, steps: 5 },
+    concepts: [
+      { id: 'auth',  name: 'Authentication', skill: 'domain', nodes: ['AuthService', 'TokenManager'] },
+      { id: 'oauth', name: 'OAuth',          skill: 'integration', nodes: ['GithubOAuth'] },
+    ],
+  };
+  let demoRoadmapStatus = $state<'ok'|'generating'>('ok');
+  let demoGeneratedAt = $state(new Date().toLocaleTimeString('fr-FR'));
+  function demoRegenerate() {
+    demoRoadmapStatus = 'generating';
+    setTimeout(() => {
+      demoRoadmapStatus = 'ok';
+      demoGeneratedAt = new Date().toLocaleTimeString('fr-FR');
+    }, 2000);
+  }
 </script>
 
 <div style="padding: 2rem; max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem;">
@@ -260,6 +288,20 @@
           {/if}
         {/snippet}
       </JgrTabs>
+    </div>
+  </section>
+
+  <!-- ── JgrRoadmap ── -->
+  <section>
+    <h2 class="section-title">JgrRoadmap + JgrTabList</h2>
+    <div style="height: 420px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden;">
+      <JgrRoadmap
+        src="/api/roadmap-viz"
+        roadmap={mockRoadmap}
+        status={demoRoadmapStatus}
+        generatedAt={demoGeneratedAt}
+        onRegenerate={demoRegenerate}
+      />
     </div>
   </section>
 

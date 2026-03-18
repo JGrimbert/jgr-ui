@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "generated": "2026-03-18T10:56:47.324Z",
+  "files": {
+    "src\\lib\\index.ts": {
+      "mtime": 1773830349041.827,
+      "size": 1014,
+      "hash": "a13a6b7aaf1f",
+      "classCount": 0,
+      "methodCount": 0
+    }
+  },
+  "methods": {},
+  "classes": {}
+}

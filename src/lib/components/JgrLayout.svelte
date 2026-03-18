@@ -9,6 +9,7 @@
     height = '100vh',
     leftLabel = 'GAUCHE',
     rightLabel = 'DROITE',
+    showStrips = true,
     topbar,
     left,
     center,
@@ -21,6 +22,7 @@
     height?: string;
     leftLabel?: string;
     rightLabel?: string;
+    showStrips?: boolean;
     topbar?: Snippet;
     left?: Snippet;
     center?: Snippet;
@@ -102,11 +104,13 @@
 
   <div class="layout-body">
     <!-- Strip gauche -->
+    {#if showStrips}
     <div class="panel-strip panel-strip--left">
       <button class:active={!collapsed.left} onclick={() => toggleCollapse('left')}>
         <span class="strip-label">{leftLabel}</span>
       </button>
     </div>
+    {/if}
 
     {#if !collapsed.left && left}
       <div class="layout-panel layout-left" style="width: {widths.left}px">
@@ -139,11 +143,13 @@
     {/if}
 
     <!-- Strip droite -->
+    {#if showStrips}
     <div class="panel-strip panel-strip--right">
       <button class:active={!collapsed.right} onclick={() => toggleCollapse('right')}>
         <span class="strip-label">{rightLabel}</span>
       </button>
     </div>
+    {/if}
   </div>
 
   {#if footer}

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap · jgr-ui</title>
+  <style>
+    /* ── Variables lolve ───────────────────────────────── */
+    :root {
+      --stroke-purple-light:        #9181f9;
+      --stroke-purple-light-middle: #7c6af7;
+      --stroke-purple-light-trigger:#4d3fa0;
+      --stroke-purple-darker:       #4d3fa0;
+      --lolve-purple:               #c5b5f0;
+      --lolve-purple-dark:          #4d3fa0;
+      --lolve-blue:                 #a8b4f0;
+      --lolve-bright:               #e8c87a;
+      --lolve-brighter:             #c97844;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #12121a;
+      color: rgba(255,255,255,0.80);
+      font-family: monospace;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Graph panel ───────────────────────────────────── */
+    #graph-panel {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    #graph-svg {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+    #graph-svg:active { cursor: grabbing; }
+
+    /* ── orb-lines (DirectRenderer.vue style) ─────────── */
+    .orb-line {
+      stroke: var(--stroke-purple-light);
+      stroke-width: 0.8;
+      fill: none;
+      opacity: 0.35;
+      transition: opacity 0.2s, stroke-width 0.2s;
+    }
+    .orb-line.highlight {
+      opacity: 0.9;
+      stroke-width: 1.5;
+    }
+    .orb-line.dim { opacity: 0.05; }
+
+    /* ── Vertex circles ────────────────────────────────── */
+    .vertex { cursor: pointer; }
+    .vertex .vertex-circle {
+      transition: stroke-width 0.15s, filter 0.15s;
+    }
+    .vertex:hover .vertex-circle,
+    .vertex.active .vertex-circle {
+      stroke-width: 2.2;
+      filter: url(#glow);
+    }
+    .vertex .halo { transition: opacity 0.15s; }
+    .vertex:hover .halo,
+    .vertex.active .halo { opacity: 0.2; }
+
+    /* ── Header ────────────────────────────────────────── */
+    #header {
+      position: absolute;
+      top: 16px; left: 16px;
+      pointer-events: none;
+    }
+    #header .meta {
+      font-size: 9px;
+      color: var(--stroke-purple-light-middle);
+      opacity: 0.5;
+      padding-left: 24px;
+    }
+
+    /* ── Stats pill ────────────────────────────────────── */
+    #stats-bar {
+      position: absolute;
+      bottom: 16px; left: 16px;
+      display: flex; gap: 12px;
+      pointer-events: none;
+    }
+    .stat-pill {
+      font-size: 9px;
+      color: rgba(255,255,255,0.25);
+      font-family: monospace;
+    }
+
+    /* ── Spine nodes (anneau doré) ─────────────────── */
+    .spine-node .spine-ring {
+      animation: spine-pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes spine-pulse {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 0.9; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div id="graph-panel">
+  <svg id="graph-svg" xmlns="http://www.w3.org/2000/svg">
+    <g id="zoom-group">
+      
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10"
+            refX="9" refY="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9181f9" opacity="0.7"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="vertexGrad" cx="35%" cy="35%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.15)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.0)"/>
+    </radialGradient>
+  </defs>
+
+      <!-- Grille de niveaux -->
+      <g class="level-lines"><line x1="0" y1="80" x2="320" y2="80"
+      stroke="#4d3fa0" stroke-width="0.3" opacity="0.2" stroke-dasharray="4,8"/>
+    <text x="8" y="74" font-size="9" fill="#7c6af7" opacity="0.5"
+          font-family="monospace">L0</text>
+<line x1="0" y1="250" x2="320" y2="250"
+      stroke="#4d3fa0" stroke-width="0.3" opacity="0.2" stroke-dasharray="4,8"/>
+    <text x="8" y="244" font-size="9" fill="#7c6af7" opacity="0.5"
+          font-family="monospace">L1</text></g>
+
+      <!-- Orb-lines (dépendances) -->
+      <g class="orb-lines"><path class="orb-line"
+        data-from="1" data-to="2"
+        d="M 160 102 C 160 165, 160 165, 160 228" marker-end="url(#arrow)"/></g>
+
+      <!-- Vertex circles -->
+      <g class="vertices">
+  <g class="vertex spine-node" data-id="1" data-skill="internal"
+     transform="translate(160,80)">
+    <circle r="34" fill="none" stroke="#f5c542" stroke-width="1.2" class="spine-ring"/>
+    <!-- Halo -->
+    <circle r="30" fill="rgba(255,255,255,0.25)" opacity="0.06" class="halo"/>
+    <!-- Orb circle (lolve style) -->
+    <circle r="22" fill="#12121a" stroke="rgba(255,255,255,0.25)"
+            stroke-width="1.2" class="vertex-circle"/>
+    <!-- Gradient overlay -->
+    <circle r="22" fill="url(#vertexGrad)"/>
+    <!-- Step number -->
+    <text y="1" text-anchor="middle" dominant-baseline="middle"
+          font-size="11" fill="rgba(255,255,255,0.25)" font-weight="600" class="step-num">
+      1
+    </text>
+    <!-- Skill dot -->
+    <circle cx="16" cy="-16" r="3"
+            fill="rgba(255,255,255,0.25)" opacity="0.9"/>
+    <!-- Tooltip data (hidden) -->
+    <title>Internal: ?
+
+Nodes:
+./$types</title>
+  </g>
+
+  <g class="vertex spine-node" data-id="2" data-skill="internal"
+     transform="translate(160,250)">
+    <circle r="34" fill="none" stroke="#f5c542" stroke-width="1.2" class="spine-ring"/>
+    <!-- Halo -->
+    <circle r="30" fill="rgba(255,255,255,0.25)" opacity="0.06" class="halo"/>
+    <!-- Orb circle (lolve style) -->
+    <circle r="22" fill="#12121a" stroke="rgba(255,255,255,0.25)"
+            stroke-width="1.2" class="vertex-circle"/>
+    <!-- Gradient overlay -->
+    <circle r="22" fill="url(#vertexGrad)"/>
+    <!-- Step number -->
+    <text y="1" text-anchor="middle" dominant-baseline="middle"
+          font-size="11" fill="rgba(255,255,255,0.25)" font-weight="600" class="step-num">
+      2
+    </text>
+    <!-- Skill dot -->
+    <circle cx="16" cy="-16" r="3"
+            fill="rgba(255,255,255,0.25)" opacity="0.9"/>
+    <!-- Tooltip data (hidden) -->
+    <title>Internal: ?
+
+Nodes:
+src/routes/api/roadmap-viz/+server.ts</title>
+  </g></g>
+
+      <!-- Labels -->
+      <g class="labels">
+  <g transform="translate(160,118)">
+    <text text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.25)" opacity="0.7"
+          font-family="monospace">Internal</text>
+    <text y="12" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.80)" opacity="0.5"
+          font-family="monospace">?</text>
+  </g>
+
+  <g transform="translate(160,288)">
+    <text text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.25)" opacity="0.7"
+          font-family="monospace">Internal</text>
+    <text y="12" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.80)" opacity="0.5"
+          font-family="monospace">?</text>
+  </g></g>
+    </g>
+  </svg>
+
+  <!-- Header -->
+  <div id="header">
+    <div class="meta">
+      2026-03-18 11:04
+      
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div id="stats-bar">
+    <div class="stat-pill">2 nodes</div>
+    <div class="stat-pill">1 edges</div>
+    <div class="stat-pill">2 levels</div>
+    <div class="stat-pill">2 steps</div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // ── Données ─────────────────────────────────────────────
+  const roadmap = {"coalNodes":[],"steps":[{"id":1,"skill":"internal","label":"Internal: ?","nodes":["./$types"],"files":[],"rationale":"Foundational — no dependencies","dependsOnSteps":[],"isSpine":true,"concept":null,"pattern":null,"issues":[],"coalNodeId":null},{"id":2,"skill":"internal","label":"Internal: ?","nodes":["src/routes/api/roadmap-viz/+server.ts"],"files":[],"rationale":"Depends on 1 prior step","dependsOnSteps":[1],"isSpine":true,"concept":null,"pattern":null,"issues":[],"coalNodeId":null}]};
+
+  // ── Pan / Zoom ─────────────────────────────────────────
+  const svg   = document.getElementById('graph-svg');
+  const group = document.getElementById('zoom-group');
+  let scale = 0.85, tx = 40, ty = 20;
+  let dragging = false, lastX = 0, lastY = 0;
+
+  function applyTransform() {
+    group.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+  }
+  applyTransform();
+
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = -e.deltaY / 600;
+    const rect  = svg.getBoundingClientRect();
+    const mx    = e.clientX - rect.left;
+    const my    = e.clientY - rect.top;
+    const newScale = Math.max(0.2, Math.min(3, scale + delta));
+    tx = mx - (mx - tx) * (newScale / scale);
+    ty = my - (my - ty) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  svg.addEventListener('mousedown', e => {
+    if (e.target.closest('.vertex')) return;
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx += e.clientX - lastX; ty += e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  // ── Interaction vertex / sidebar ───────────────────────
+  let activeId = null;
+
+  function activate(id) {
+    if (activeId === id) { deactivate(); return; }
+    deactivate();
+    activeId = id;
+
+    const step = roadmap.steps.find(s => s.id === id);
+    if (!step) return;
+
+    // Highlight vertex
+    document.querySelectorAll(`.vertex[data-id="${id}"]`).forEach(el => el.classList.add('active'));
+
+    // Highlight orb-lines
+    const related = new Set([id, ...step.dependsOnSteps]);
+    const dependents = roadmap.steps.filter(s => s.dependsOnSteps.includes(id)).map(s => s.id);
+    dependents.forEach(d => related.add(d));
+
+    document.querySelectorAll('.orb-line').forEach(el => {
+      const from = Number(el.dataset.from);
+      const to   = Number(el.dataset.to);
+      if (related.has(from) && related.has(to)) {
+        el.classList.add('highlight');
+      } else {
+        el.classList.add('dim');
+      }
+    });
+
+    // Highlight connected vertices
+    related.forEach(rid => {
+      document.querySelectorAll(`.vertex[data-id="${rid}"]`).forEach(el => el.classList.add('active'));
+    });
+
+  }
+
+  function deactivate() {
+    activeId = null;
+    document.querySelectorAll('.vertex.active').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.orb-line').forEach(el => {
+      el.classList.remove('highlight', 'dim');
+    });
+  }
+
+  // Click sur vertex SVG
+  document.querySelectorAll('.vertex').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      activate(Number(el.dataset.id));
+    });
+  });
+
+  // Click sur fond → deselect
+  svg.addEventListener('click', e => {
+    if (!e.target.closest('.vertex')) deactivate();
+  });
+
+  // ── Fit to viewport ────────────────────────────────────
+  const bbox = group.getBBox();
+  if (bbox.width && bbox.height) {
+    const vw = svg.clientWidth, vh = svg.clientHeight;
+    const margin = 40;
+    const s = Math.min(
+      (vw - margin * 2) / bbox.width,
+      (vh - margin * 2) / bbox.height,
+      1
+    );
+    scale = s * 0.9;
+    tx = (vw - bbox.width  * scale) / 2 - bbox.x * scale;
+    ty = (vh - bbox.height * scale) / 2 - bbox.y * scale;
+    applyTransform();
+  }
+
+
+})();
+</script>
+</body>
+</html>
