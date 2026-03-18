@@ -10,6 +10,7 @@ export type RoadmapStep = {
     isSpine?: boolean;
     concept?: string;
     pattern?: string;
+    coalNodeId?: string;
 };
 export type RoadmapData = {
     steps: RoadmapStep[];

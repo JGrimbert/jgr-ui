@@ -12,7 +12,7 @@ export type ListItem = {
     actionLoading?: boolean;
     actionDone?: boolean;
     onaction?: () => void;
-    ondelete?: () => void;
+    onclose?: { handler: () => void; loading?: boolean; done?: boolean };
 };
 export type TabDef = {
     id: string;
