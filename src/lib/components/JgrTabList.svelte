@@ -12,7 +12,7 @@
     actionLoading?: boolean;
     actionDone?: boolean;
     onaction?: () => void;
-    ondelete?: () => void;
+    onclose?: { handler: () => void; loading?: boolean; done?: boolean };
   };
 
   export type TabDef = {
@@ -118,8 +118,15 @@
               onaction={item.onaction}
               onselect={() => onselect?.(currentId, item)}
             />
-            {#if item.ondelete}
-              <button class="tl-del" onclick={item.ondelete} title="Supprimer">✕</button>
+            {#if item.onclose}
+              <button
+                class="tl-del"
+                class:tl-del-done={item.onclose.done}
+                class:tl-del-vis={item.onclose.loading || item.onclose.done}
+                onclick={(e) => { e.stopPropagation(); item.onclose!.handler(); }}
+                disabled={item.onclose.loading || item.onclose.done}
+                title="Fermer"
+              >{item.onclose.done ? '✓' : item.onclose.loading ? '…' : '✕'}</button>
             {/if}
           </div>
           {#if current.selectedId === item.id && detail}
@@ -248,7 +255,10 @@
   transition: opacity 0.1s, color 0.1s;
 }
 .tl-row:hover .tl-del { opacity: 1; }
-.tl-del:hover { color: #f44336; }
+.tl-del-vis { opacity: 1 !important; }
+.tl-del:hover:not(:disabled) { color: #f44336; }
+.tl-del-done { color: #3a8a3a; cursor: default; }
+.tl-del:disabled { cursor: default; }
 .tl-hint { padding: 1rem; color: #333; font-size: 0.8rem; }
 .tl-custom {
   flex: 1;
