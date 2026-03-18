@@ -169,6 +169,9 @@
   flex: 1;
   min-height: 0;
 }
+.layout.dragging :global(iframe) {
+  pointer-events: none;
+}
 .layout-panel {
   flex-shrink: 0;
   overflow: hidden;

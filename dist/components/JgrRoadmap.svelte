@@ -15,6 +15,7 @@
     isSpine?: boolean;
     concept?: string;
     pattern?: string;
+    coalNodeId?: string;
   };
 
   export type RoadmapData = {
@@ -50,6 +51,46 @@
 
   let activeTab = $state('tasks');
 
+  function dominantSkill(steps: RoadmapStep[]): string {
+    const counts: Record<string, number> = {};
+    for (const s of steps) counts[s.skill] = (counts[s.skill] ?? 0) + 1;
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'internal';
+  }
+
+  function stepKey(step: RoadmapStep, depth: number): string {
+    const file = step.files?.[0];
+    if (file) {
+      const parts = file.replace(/\\/g, '/').split('/')
+        .filter(p => p && !p.startsWith('+') && !p.includes('.'));
+      const idx = parts.length - 1 - depth;
+      if (idx >= 0) return parts[idx];
+      if (parts.length > 0) return parts[parts.length - 1];
+    }
+    return step.label.split(': ')[1] || step.label || 'misc';
+  }
+
+  // depth 0 = étapes (concept/fichier), 1 = dossiers, 2 = domaines (skill)
+  function buildStackItems(steps: RoadmapStep[], depth: number): ListItem[] {
+    const groups = new Map<string, RoadmapStep[]>();
+    for (const step of steps) {
+      const k = depth === 0
+        ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
+        : depth === 1
+          ? stepKey(step, 1)
+          : (step.skill || 'internal');
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k)!.push(step);
+    }
+    return [...groups.entries()]
+      .sort((a, b) => Math.min(...a[1].map(s => s.id)) - Math.min(...b[1].map(s => s.id)))
+      .map(([key, ss]) => ({
+        id: `stack-${depth}-${key}`,
+        label: key,
+        prefix: String(ss.length),
+        labels: [{ name: dominantSkill(ss), color: SKILL_COLOR[dominantSkill(ss)] ?? '555566' }],
+      }));
+  }
+
   const tabs: TabDef[] = $derived.by(() => {
     const steps = roadmap?.steps ?? [];
 
@@ -69,34 +110,12 @@
       labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
     }));
 
-    // Plan : spine steps + concepts groupés
-    const spineSteps = steps.filter(s => s.isSpine);
-    const conceptMap = new Map<string, RoadmapStep[]>();
-    for (const s of steps) {
-      if (s.concept) {
-        if (!conceptMap.has(s.concept)) conceptMap.set(s.concept, []);
-        conceptMap.get(s.concept)!.push(s);
-      }
-    }
-    const planItems: ListItem[] = [
-      ...spineSteps.map(s => ({
-        id: `spine-${s.id}`,
-        label: s.label,
-        prefix: '◉',
-        labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
-      })),
-      ...[...conceptMap.entries()].map(([concept, ss]) => ({
-        id: `concept-${concept}`,
-        label: `${concept} (${ss.length} steps)`,
-        prefix: '⬡',
-        labels: [{ name: ss[0].skill, color: SKILL_COLOR[ss[0].skill] ?? '555566' }],
-      })),
-    ];
-
     return [
-      { id: 'tasks', label: 'Tasks', items: taskItems, empty: 'Aucun step lié à des issues' },
-      { id: 'steps', label: 'Steps', items: stepItems, empty: 'Aucun step' },
-      { id: 'plan',  label: 'Plan',  items: planItems, empty: 'Aucun chemin critique' },
+      { id: 'tasks',    label: 'Tasks',    items: taskItems,                    empty: 'Aucun step lié à des issues' },
+      { id: 'steps',    label: 'Steps',    items: stepItems,                    empty: 'Aucun step' },
+      { id: 'etapes',   label: 'Étapes',   items: buildStackItems(steps, 0),   empty: 'Aucune donnée' },
+      { id: 'dossiers', label: 'Dossiers', items: buildStackItems(steps, 1),   empty: 'Aucune donnée' },
+      { id: 'domaines', label: 'Domaines', items: buildStackItems(steps, 2),   empty: 'Aucune donnée' },
     ];
   });
 </script>
