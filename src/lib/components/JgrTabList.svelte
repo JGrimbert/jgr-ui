@@ -7,6 +7,7 @@
     label: string;
     prefix?: string | number;
     labels?: { name: string; color: string }[];
+    issues?: number[];
     dimmed?: boolean;
     actionLabel?: string;
     actionLoading?: boolean;
@@ -111,6 +112,7 @@
               prefix={item.prefix}
               title={item.label}
               labels={item.labels}
+              issues={item.issues}
               state={current.selectedId === item.id ? 'selected' : 'default'}
               actionLabel={item.actionLabel}
               actionLoading={item.actionLoading}

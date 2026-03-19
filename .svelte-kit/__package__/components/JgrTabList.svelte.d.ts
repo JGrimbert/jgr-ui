@@ -7,12 +7,17 @@ export type ListItem = {
         name: string;
         color: string;
     }[];
+    issues?: number[];
     dimmed?: boolean;
     actionLabel?: string;
     actionLoading?: boolean;
     actionDone?: boolean;
     onaction?: () => void;
-    ondelete?: () => void;
+    onclose?: {
+        handler: () => void;
+        loading?: boolean;
+        done?: boolean;
+    };
 };
 export type TabDef = {
     id: string;

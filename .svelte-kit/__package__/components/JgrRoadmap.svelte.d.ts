@@ -34,6 +34,7 @@ type $$ComponentProps = {
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;
     onRegenerate?: () => void;
+    onissuefilter?: (issues: number[]) => void;
 };
 declare const JgrRoadmap: import("svelte").Component<$$ComponentProps, {}, "">;
 type JgrRoadmap = ReturnType<typeof JgrRoadmap>;

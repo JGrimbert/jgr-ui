@@ -214,7 +214,7 @@ src/routes/api/roadmap-viz/+server.ts</title>
   <!-- Header -->
   <div id="header">
     <div class="meta">
-      2026-03-18 11:55
+      2026-03-19 12:04
       
     </div>
   </div>
@@ -230,121 +230,8 @@ src/routes/api/roadmap-viz/+server.ts</title>
 </div>
 
 <script>
-(function() {
-  // ── Données ─────────────────────────────────────────────
-  const roadmap = {"coalNodes":[],"steps":[{"id":1,"skill":"internal","label":"Internal: ?","nodes":["./$types"],"files":[],"rationale":"Foundational — no dependencies","dependsOnSteps":[],"isSpine":true,"concept":null,"pattern":null,"issues":[],"coalNodeId":null},{"id":2,"skill":"internal","label":"Internal: ?","nodes":["src/routes/api/roadmap-viz/+server.ts"],"files":[],"rationale":"Depends on 1 prior step","dependsOnSteps":[1],"isSpine":true,"concept":null,"pattern":null,"issues":[],"coalNodeId":null}]};
-
-  // ── Pan / Zoom ─────────────────────────────────────────
-  const svg   = document.getElementById('graph-svg');
-  const group = document.getElementById('zoom-group');
-  let scale = 0.85, tx = 40, ty = 20;
-  let dragging = false, lastX = 0, lastY = 0;
-
-  function applyTransform() {
-    group.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
-  }
-  applyTransform();
-
-  svg.addEventListener('wheel', e => {
-    e.preventDefault();
-    const delta = -e.deltaY / 600;
-    const rect  = svg.getBoundingClientRect();
-    const mx    = e.clientX - rect.left;
-    const my    = e.clientY - rect.top;
-    const newScale = Math.max(0.2, Math.min(3, scale + delta));
-    tx = mx - (mx - tx) * (newScale / scale);
-    ty = my - (my - ty) * (newScale / scale);
-    scale = newScale;
-    applyTransform();
-  }, { passive: false });
-
-  svg.addEventListener('mousedown', e => {
-    if (e.target.closest('.vertex')) return;
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-  });
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    tx += e.clientX - lastX; ty += e.clientY - lastY;
-    lastX = e.clientX; lastY = e.clientY;
-    applyTransform();
-  });
-  window.addEventListener('mouseup', () => { dragging = false; });
-
-  // ── Interaction vertex / sidebar ───────────────────────
-  let activeId = null;
-
-  function activate(id) {
-    if (activeId === id) { deactivate(); return; }
-    deactivate();
-    activeId = id;
-
-    const step = roadmap.steps.find(s => s.id === id);
-    if (!step) return;
-
-    // Highlight vertex
-    document.querySelectorAll(`.vertex[data-id="${id}"]`).forEach(el => el.classList.add('active'));
-
-    // Highlight orb-lines
-    const related = new Set([id, ...step.dependsOnSteps]);
-    const dependents = roadmap.steps.filter(s => s.dependsOnSteps.includes(id)).map(s => s.id);
-    dependents.forEach(d => related.add(d));
-
-    document.querySelectorAll('.orb-line').forEach(el => {
-      const from = Number(el.dataset.from);
-      const to   = Number(el.dataset.to);
-      if (related.has(from) && related.has(to)) {
-        el.classList.add('highlight');
-      } else {
-        el.classList.add('dim');
-      }
-    });
-
-    // Highlight connected vertices
-    related.forEach(rid => {
-      document.querySelectorAll(`.vertex[data-id="${rid}"]`).forEach(el => el.classList.add('active'));
-    });
-
-  }
-
-  function deactivate() {
-    activeId = null;
-    document.querySelectorAll('.vertex.active').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.orb-line').forEach(el => {
-      el.classList.remove('highlight', 'dim');
-    });
-  }
-
-  // Click sur vertex SVG
-  document.querySelectorAll('.vertex').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      activate(Number(el.dataset.id));
-    });
-  });
-
-  // Click sur fond → deselect
-  svg.addEventListener('click', e => {
-    if (!e.target.closest('.vertex')) deactivate();
-  });
-
-  // ── Fit to viewport ────────────────────────────────────
-  const bbox = group.getBBox();
-  if (bbox.width && bbox.height) {
-    const vw = svg.clientWidth, vh = svg.clientHeight;
-    const margin = 40;
-    const s = Math.min(
-      (vw - margin * 2) / bbox.width,
-      (vh - margin * 2) / bbox.height,
-      1
-    );
-    scale = s * 0.9;
-    tx = (vw - bbox.width  * scale) / 2 - bbox.x * scale;
-    ty = (vh - bbox.height * scale) / 2 - bbox.y * scale;
-    applyTransform();
-  }
-
-
-})();
+  window.__roadmapData = {"coalNodes":[],"steps":[{"id":1,"skill":"internal","label":"Internal: ?","nodes":["./$types"],"files":[],"rationale":"Foundational — no dependencies","dependsOnSteps":[],"isSpine":true,"concept":null,"pattern":null,"issues":[],"coalNodeId":null},{"id":2,"skill":"internal","label":"Internal: ?","nodes":["src/routes/api/roadmap-viz/+server.ts"],"files":[],"rationale":"Depends on 1 prior step","dependsOnSteps":[1],"isSpine":true,"concept":null,"pattern":null,"issues":[],"coalNodeId":null}]};
 </script>
+<script src="/api/roadmap-js"></script>
 </body>
 </html>

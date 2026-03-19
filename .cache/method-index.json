@@ -1,11 +1,18 @@
 {
   "version": 1,
-  "generated": "2026-03-18T10:56:47.324Z",
+  "generated": "2026-03-19T11:59:03.882Z",
   "files": {
     "src\\lib\\index.ts": {
-      "mtime": 1773830349041.827,
+      "mtime": 1773832755988.114,
       "size": 1014,
       "hash": "a13a6b7aaf1f",
+      "classCount": 0,
+      "methodCount": 0
+    },
+    "src\\routes\\api\\roadmap-viz\\+server.ts": {
+      "mtime": 1773832755989.1155,
+      "size": 637,
+      "hash": "fc6729ad3849",
       "classCount": 0,
       "methodCount": 0
     }

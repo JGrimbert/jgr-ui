@@ -41,12 +41,14 @@
     status = 'ok',
     generatedAt,
     onRegenerate,
+    onissuefilter,
   }: {
     src: string;
     roadmap?: RoadmapData;
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;
     onRegenerate?: () => void;
+    onissuefilter?: (issues: number[]) => void;
   } = $props();
 
   let activeTab = $state('tasks');
@@ -89,6 +91,7 @@
         label: key,
         prefix: String(ss.length),
         labels: [{ name: dominantSkill(ss), color: SKILL_COLOR[dominantSkill(ss)] ?? '555566' }],
+        issues: [...new Set(ss.flatMap(s => s.issues ?? []))],
       }));
   }
 
@@ -129,10 +132,12 @@
     if (selectedItemId === item.id) {
       selectedItemId = null;
       sendCmd({ type: 'deactivate' });
+      onissuefilter?.([]);
     } else {
       selectedItemId = item.id;
       const ids = itemSteps.get(item.id) ?? [];
       sendCmd({ type: 'activate', ids });
+      onissuefilter?.(item.issues ?? []);
     }
   }
 
@@ -149,6 +154,7 @@
         label: s.label,
         prefix: `#${n}`,
         labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
+        issues: [n],
       })));
 
     const stepItems: ListItem[] = steps.map(s => ({
@@ -156,6 +162,7 @@
       label: s.label,
       prefix: s.isSpine ? '◉' : String(s.id),
       labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
+      issues: s.issues ?? [],
     }));
 
     return [

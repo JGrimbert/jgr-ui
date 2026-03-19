@@ -7,6 +7,7 @@
     label: string;
     prefix?: string | number;
     labels?: { name: string; color: string }[];
+    issues?: number[];
     dimmed?: boolean;
     actionLabel?: string;
     actionLoading?: boolean;
