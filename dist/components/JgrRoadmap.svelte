@@ -86,13 +86,19 @@
     }
     return [...groups.entries()]
       .sort((a, b) => Math.min(...a[1].map(s => s.id)) - Math.min(...b[1].map(s => s.id)))
-      .map(([key, ss]) => ({
-        id: `stack-${depth}-${key}`,
-        label: key,
-        prefix: String(ss.length),
-        labels: [{ name: dominantSkill(ss), color: SKILL_COLOR[dominantSkill(ss)] ?? '555566' }],
-        issues: [...new Set(ss.flatMap(s => s.issues ?? []))],
-      }));
+      .map(([key, ss]) => {
+        const issueNums = [...new Set(ss.flatMap(s => s.issues ?? []))];
+        return {
+          id: `stack-${depth}-${key}`,
+          label: key,
+          prefix: String(ss.length),
+          labels: [
+            { name: dominantSkill(ss), color: SKILL_COLOR[dominantSkill(ss)] ?? '555566' },
+            ...issueNums.map(n => ({ name: `#${n}`, color: '446688' })),
+          ],
+          issues: issueNums,
+        };
+      });
   }
 
   // Map itemId → stepIds pour postMessage vers l'iframe
@@ -161,7 +167,10 @@
       id: String(s.id),
       label: s.label,
       prefix: s.isSpine ? '◉' : String(s.id),
-      labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
+      labels: [
+        { name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' },
+        ...(s.issues ?? []).map(n => ({ name: `#${n}`, color: '446688' })),
+      ],
       issues: s.issues ?? [],
     }));
 
