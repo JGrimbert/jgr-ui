@@ -10,29 +10,42 @@
       "_internal.js"
     ]
   },
+  "_client.js": {
+    "file": "chunks/client.js",
+    "name": "client",
+    "imports": [
+      "_exports.js",
+      "_utils.js",
+      "_root.js",
+      "_index.js"
+    ]
+  },
+  "_dev.js": {
+    "file": "chunks/dev.js",
+    "name": "dev",
+    "imports": [
+      "_validate.js",
+      "_index.js"
+    ]
+  },
   "_environment.js": {
     "file": "chunks/environment.js",
     "name": "environment"
   },
   "_exports.js": {
     "file": "chunks/exports.js",
-    "name": "exports"
-  },
-  "_false.js": {
-    "file": "chunks/false.js",
-    "name": "false"
+    "name": "exports",
+    "imports": [
+      "_index.js",
+      "_root.js"
+    ]
   },
   "_index.js": {
     "file": "chunks/index.js",
     "name": "index",
     "imports": [
-      "_index2.js",
-      "_root.js"
+      "_validate.js"
     ]
-  },
-  "_index2.js": {
-    "file": "chunks/index2.js",
-    "name": "index"
   },
   "_internal.js": {
     "file": "chunks/internal.js",
@@ -46,29 +59,30 @@
     "file": "chunks/root.js",
     "name": "root",
     "imports": [
-      "_index2.js",
-      "_false.js"
+      "_index.js",
+      "_true.js",
+      "_validate.js"
     ]
   },
   "_shared.js": {
     "file": "chunks/shared.js",
     "name": "shared",
     "imports": [
-      "_utils.js"
+      "_utils.js",
+      "_environment.js"
     ]
   },
-  "_state.svelte.js": {
-    "file": "chunks/state.svelte.js",
-    "name": "state.svelte",
-    "imports": [
-      "_index2.js",
-      "_exports.js",
-      "_root.js"
-    ]
+  "_true.js": {
+    "file": "chunks/true.js",
+    "name": "true"
   },
   "_utils.js": {
     "file": "chunks/utils.js",
     "name": "utils"
+  },
+  "_validate.js": {
+    "file": "chunks/validate.js",
+    "name": "validate"
   },
   "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js": {
     "file": "remote-entry.js",
@@ -77,7 +91,7 @@
     "isEntry": true,
     "imports": [
       "_shared.js",
-      "_false.js",
+      "_true.js",
       "_environment.js"
     ]
   },
@@ -87,12 +101,10 @@
     "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte",
     "isEntry": true,
     "imports": [
-      "_index2.js",
-      "_state.svelte.js",
-      "_exports.js",
-      "_utils.js",
+      "_validate.js",
       "_index.js",
-      "_root.js"
+      "_dev.js",
+      "_client.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
@@ -101,12 +113,11 @@
     "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js",
     "isEntry": true,
     "imports": [
-      "_false.js",
+      "_true.js",
       "_environment.js",
       "_shared.js",
       "_exports.js",
       "_utils.js",
-      "_index.js",
       "_internal.js"
     ]
   },
@@ -115,6 +126,9 @@
     "name": "entries/pages/_layout.svelte",
     "src": "src/routes/+layout.svelte",
     "isEntry": true,
+    "imports": [
+      "_validate.js"
+    ],
     "css": [
       "_app/immutable/assets/_layout.C8yubOK7.css"
     ]
@@ -125,10 +139,8 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_exports.js",
-      "_utils.js",
-      "_root.js",
-      "_state.svelte.js"
+      "_validate.js",
+      "_client.js"
     ]
   },
   "src/routes/demo/+page.svelte": {
@@ -137,10 +149,12 @@
     "src": "src/routes/demo/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_index2.js"
+      "_index.js",
+      "_dev.js",
+      "_validate.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.BhgTEv_y.css"
+      "_app/immutable/assets/_page.DAmcFCLk.css"
     ]
   }
 }

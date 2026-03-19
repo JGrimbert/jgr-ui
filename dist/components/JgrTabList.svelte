@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { Snippet } from 'svelte';
   import JgrItem from './JgrItem.svelte';
 
@@ -26,6 +27,8 @@
     cta?: { label: string; onclick: () => void };
     /** Toute la liste passe en stale (opacité réduite, interactions bloquées) */
     pending?: boolean;
+    /** Label affiché sur le JgrCta pending. Défaut : "En cours" */
+    pendingLabel?: string;
     loading?: boolean;
     empty?: string;
   };
@@ -51,6 +54,14 @@
   let _tab = $state(tabs[0]?.id ?? '');
   const currentId = $derived(activeTab ?? _tab);
   const current = $derived(tabs.find(t => t.id === currentId));
+
+  const FRAMES = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
+  let loadFrame = $state(0);
+
+  onMount(() => {
+    const timer = setInterval(() => { loadFrame = (loadFrame + 1) % FRAMES.length; }, 100);
+    return () => clearInterval(timer);
+  });
 
   let queries = $state<Record<string, string>>({});
   const q = $derived(queries[currentId] ?? '');
@@ -90,6 +101,7 @@
   </div>
 
   {#if current?.items !== undefined}
+    {#if !current.loading}
     <div class="tl-search">
       <input
         class="tl-input"
@@ -99,10 +111,19 @@
       />
       {#if q}<button class="tl-clear" onclick={() => setQ('')}>✕</button>{/if}
     </div>
+    {/if}
 
+    {#if current.pending}
+      <div class="tl-pending-row">
+        <span class="tl-load-spin">{FRAMES[loadFrame]}</span>
+        {#if current.pendingLabel}<span class="tl-pending-label">{current.pendingLabel}</span>{/if}
+      </div>
+    {/if}
     <div class="tl-list" class:stale={current.pending}>
       {#if current.loading}
-        <p class="tl-hint">Chargement…</p>
+        <div class="tl-loading">
+          <span class="tl-load-spin">{FRAMES[loadFrame]}</span>
+        </div>
       {:else if rows.length === 0}
         <p class="tl-hint">{current.empty ?? (q ? 'Aucun résultat' : 'Vide')}</p>
       {:else}
@@ -229,13 +250,30 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  transition: opacity 0.15s;
+  transition: opacity 0.2s;
+}
+.tl-list.stale {
+  opacity: 0.4;
+  pointer-events: none;
 }
 .tl-list::-webkit-scrollbar { width: 4px; height: 4px; }
 .tl-list::-webkit-scrollbar-track { background: transparent; }
 .tl-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .tl-list::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
-.tl-list.stale { opacity: 0.4; pointer-events: none; }
+.tl-pending-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tl-pending-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted, #555);
+}
 .tl-row {
   position: relative;
   display: flex;
@@ -262,6 +300,18 @@
 .tl-del-done { color: #3a8a3a; cursor: default; }
 .tl-del:disabled { cursor: default; }
 .tl-hint { padding: 1rem; color: #333; font-size: 0.8rem; }
+.tl-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 0;
+}
+.tl-load-spin {
+  color: cornsilk;
+  font-size: 0.65rem;
+  opacity: 0.8;
+  font-family: 'JetBrains Mono', monospace;
+}
 .tl-custom {
   flex: 1;
   min-height: 0;
