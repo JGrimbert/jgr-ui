@@ -1,51 +1,118 @@
 {
-  "generated": "2026-03-19T12:12:24.625Z",
+  "generated": "2026-03-19T14:41:35.922Z",
   "stats": {
-    "nodes": 2,
-    "edges": 1,
-    "levels": 2,
-    "steps": 2,
+    "nodes": 10,
+    "edges": 0,
+    "levels": 1,
+    "steps": 3,
     "cycles": 0
   },
   "steps": [
     {
       "id": 1,
-      "label": "Internal: ?",
-      "skill": "internal",
+      "label": "Utility: atlas-manifest",
+      "skill": "utility",
       "nodes": [
-        "./$types"
+        "jgrBtn",
+        "jgrConsole",
+        "jgrCta",
+        "jgrItem",
+        "jgrLayout"
       ],
-      "files": [],
+      "files": [
+        "src\\lib\\atlas-manifest.ts"
+      ],
       "rationale": "Foundational — no dependencies",
       "dependsOnSteps": [],
-      "canParallelWith": [],
+      "canParallelWith": [
+        2,
+        3
+      ],
       "isSpine": true,
-      "concept": null,
+      "concept": "atlas-manifest",
       "pattern": null
     },
     {
       "id": 2,
-      "label": "Internal: ?",
-      "skill": "internal",
+      "label": "Utility: atlas-manifest",
+      "skill": "utility",
       "nodes": [
-        "src/routes/api/roadmap-viz/+server.ts"
+        "jgrPrompt",
+        "jgrTabs",
+        "jgrTheme"
       ],
-      "files": [],
-      "rationale": "Depends on 1 prior step",
-      "dependsOnSteps": [
-        1
+      "files": [
+        "src\\lib\\atlas-manifest.ts"
       ],
-      "canParallelWith": [],
-      "isSpine": true,
-      "concept": null,
+      "rationale": "Foundational — no dependencies",
+      "dependsOnSteps": [],
+      "canParallelWith": [
+        1,
+        3
+      ],
+      "isSpine": false,
+      "concept": "atlas-manifest",
+      "pattern": null
+    },
+    {
+      "id": 3,
+      "label": "Utility: atlas-composites",
+      "skill": "utility",
+      "nodes": [
+        "jgrRoadmap",
+        "jgrTabList"
+      ],
+      "files": [
+        "src\\lib\\atlas-composites.ts"
+      ],
+      "rationale": "Foundational — no dependencies",
+      "dependsOnSteps": [],
+      "canParallelWith": [
+        1,
+        2
+      ],
+      "isSpine": false,
+      "concept": "atlas-composites",
       "pattern": null
     }
   ],
   "spine": [
-    "./$types",
-    "src/routes/api/roadmap-viz/+server.ts"
+    "jgrBtn"
   ],
-  "concepts": [],
+  "concepts": [
+    {
+      "id": "atlas-manifest",
+      "name": "atlas-manifest",
+      "skill": "utility",
+      "nodes": [
+        "jgrBtn",
+        "jgrConsole",
+        "jgrCta",
+        "jgrItem",
+        "jgrLayout",
+        "jgrPrompt",
+        "jgrTabs",
+        "jgrTheme"
+      ],
+      "files": [
+        "src/lib/atlas-manifest.ts"
+      ],
+      "cohesion": 0
+    },
+    {
+      "id": "atlas-composites",
+      "name": "atlas-composites",
+      "skill": "utility",
+      "nodes": [
+        "jgrRoadmap",
+        "jgrTabList"
+      ],
+      "files": [
+        "src/lib/atlas-composites.ts"
+      ],
+      "cohesion": 0
+    }
+  ],
   "patterns": {
     "factories": [],
     "repositories": [],

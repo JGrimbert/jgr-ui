@@ -1,0 +1,5 @@
+{
+  "extensions": [".ts", ".js", ".svelte"],
+  "manifest": "src/lib/atlas-manifest.ts",
+  "exclude": ["dist", "node_modules", ".svelte-kit", ".cache"]
+}

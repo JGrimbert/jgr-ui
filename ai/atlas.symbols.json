@@ -1,0 +1,107 @@
+{
+  "classes": {},
+  "methods": {
+    "jgrTheme": {
+      "signature": "jgrTheme(theme)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrLayout": {
+      "signature": "jgrLayout(storageKey, leftWidth, rightWidth, height, leftLabel, rightLabel, showStrips)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrTabs": {
+      "signature": "jgrTabs(tabs, activeTab, onchange)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrTabList": {
+      "signature": "jgrTabList(tabs, activeTab, ontabchange, onselect)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrItem": {
+      "signature": "jgrItem(title, prefix, labels, issues, state, actionLabel, actionDone, actionLoading, onaction, onselect)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrBtn": {
+      "signature": "jgrBtn(variant, active, disabled, title, onclick)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrCta": {
+      "signature": "jgrCta(label, variant, pending, disabled, onclick)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrPrompt": {
+      "signature": "jgrPrompt(value, placeholder, sections, pending, onsubmit, onchange)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrConsole": {
+      "signature": "jgrConsole(logs, running, title, completionLabel, sessionAlive, showInput, oninterrupt, onterminate, ondismiss, oninput)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrRoadmap": {
+      "signature": "jgrRoadmap(src, roadmap, status, generatedAt, onRegenerate, onissuefilter)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    }
+  },
+  "fns": {
+    "jgrTheme": {
+      "signature": "jgrTheme(theme)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrLayout": {
+      "signature": "jgrLayout(storageKey, leftWidth, rightWidth, height, leftLabel, rightLabel, showStrips)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrTabs": {
+      "signature": "jgrTabs(tabs, activeTab, onchange)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrTabList": {
+      "signature": "jgrTabList(tabs, activeTab, ontabchange, onselect)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrItem": {
+      "signature": "jgrItem(title, prefix, labels, issues, state, actionLabel, actionDone, actionLoading, onaction, onselect)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrBtn": {
+      "signature": "jgrBtn(variant, active, disabled, title, onclick)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrCta": {
+      "signature": "jgrCta(label, variant, pending, disabled, onclick)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrPrompt": {
+      "signature": "jgrPrompt(value, placeholder, sections, pending, onsubmit, onchange)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrConsole": {
+      "signature": "jgrConsole(logs, running, title, completionLabel, sessionAlive, showInput, oninterrupt, onterminate, ondismiss, oninput)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    },
+    "jgrRoadmap": {
+      "signature": "jgrRoadmap(src, roadmap, status, generatedAt, onRegenerate, onissuefilter)",
+      "role": "helper",
+      "file": "src\\lib\\atlas-manifest.ts"
+    }
+  }
+}
