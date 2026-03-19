@@ -1,35 +1,60 @@
 # Roadmap
 > Project: **jgr-ui**
 
-*Generated: 2026-03-19T12:12:24.625Z*
+*Generated: 2026-03-19T14:41:35.922Z*
 
 ## Stats
 
 | Metric | Value |
 |--------|-------|
-| Nodes  | 2 |
-| Edges  | 1 |
-| Levels | 2 |
-| Steps  | 2 |
+| Nodes  | 10 |
+| Edges  | 0 |
+| Levels | 1 |
+| Steps  | 3 |
 
-## Spine (chemin critique — 2 nœuds)
+## Spine (chemin critique — 1 nœuds)
 
-`./$types` → `src/routes/api/roadmap-viz/+server.ts`
+`jgrBtn`
+
+## Concepts (2 fichiers)
+
+| Concept | Skill | Nœuds | Cohésion |
+|---------|-------|------:|---------|
+| atlas-manifest | utility | 8 | 0.00 |
+| atlas-composites | utility | 2 | 0.00 |
 
 ## Steps
 
-### Step 1 · Internal: ?
+### Step 1 · Utility: atlas-manifest
 
 *No prerequisites*
+*Parallelizable with: Steps 2, 3*
 
 > Foundational — no dependencies
 
-- `./$types`
+- `jgrBtn` → `src\lib\atlas-manifest.ts`
+- `jgrConsole` → `src\lib\atlas-manifest.ts`
+- `jgrCta` → `src\lib\atlas-manifest.ts`
+- `jgrItem` → `src\lib\atlas-manifest.ts`
+- `jgrLayout` → `src\lib\atlas-manifest.ts`
 
-### Step 2 · Internal: ?
+### Step 2 · Utility: atlas-manifest
 
-*Requires: Steps 1*
+*No prerequisites*
+*Parallelizable with: Steps 1, 3*
 
-> Depends on 1 prior step
+> Foundational — no dependencies
 
-- `src/routes/api/roadmap-viz/+server.ts`
+- `jgrPrompt` → `src\lib\atlas-manifest.ts`
+- `jgrTabs` → `src\lib\atlas-manifest.ts`
+- `jgrTheme` → `src\lib\atlas-manifest.ts`
+
+### Step 3 · Utility: atlas-composites
+
+*No prerequisites*
+*Parallelizable with: Steps 1, 2*
+
+> Foundational — no dependencies
+
+- `jgrRoadmap` → `src\lib\atlas-composites.ts`
+- `jgrTabList` → `src\lib\atlas-composites.ts`

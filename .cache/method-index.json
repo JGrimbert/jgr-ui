@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-03-19T11:59:03.882Z",
+  "generated": "2026-03-19T12:50:40.175Z",
   "files": {
     "src\\lib\\index.ts": {
       "mtime": 1773832755988.114,
@@ -10,13 +10,238 @@
       "methodCount": 0
     },
     "src\\routes\\api\\roadmap-viz\\+server.ts": {
-      "mtime": 1773832755989.1155,
-      "size": 637,
-      "hash": "fc6729ad3849",
+      "mtime": 1773924221006.6526,
+      "size": 885,
+      "hash": "624b8a42f549",
       "classCount": 0,
       "methodCount": 0
+    },
+    "src\\lib\\atlas-composites.ts": {
+      "mtime": 1773924635001.5266,
+      "size": 1352,
+      "hash": "53f16c441335",
+      "classCount": 0,
+      "methodCount": 2
+    },
+    "src\\lib\\atlas-manifest.ts": {
+      "mtime": 1773924624839.203,
+      "size": 4461,
+      "hash": "84b895d88109",
+      "classCount": 0,
+      "methodCount": 8
     }
   },
-  "methods": {},
+  "methods": {
+    "jgrTabList": {
+      "file": "src\\lib\\atlas-composites.ts",
+      "class": null,
+      "name": "jgrTabList",
+      "signature": "jgrTabList(tabs, activeTab, ontabchange, onselect)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 20,
+      "endLine": 25
+    },
+    "jgrRoadmap": {
+      "file": "src\\lib\\atlas-composites.ts",
+      "class": null,
+      "name": "jgrRoadmap",
+      "signature": "jgrRoadmap(src, roadmap, status, generatedAt, onRegenerate, onissuefilter)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 31,
+      "endLine": 38
+    },
+    "jgrTheme": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrTheme",
+      "signature": "jgrTheme(theme)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 80,
+      "endLine": 80
+    },
+    "jgrLayout": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrLayout",
+      "signature": "jgrLayout(storageKey, leftWidth, rightWidth, height, leftLabel, rightLabel, showStrips)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 83,
+      "endLine": 91
+    },
+    "jgrTabs": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrTabs",
+      "signature": "jgrTabs(tabs, activeTab, onchange)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 94,
+      "endLine": 98
+    },
+    "jgrItem": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrItem",
+      "signature": "jgrItem(title, prefix, labels, issues, state, actionLabel, actionDone, actionLoading, onaction, onselect)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 101,
+      "endLine": 112
+    },
+    "jgrBtn": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrBtn",
+      "signature": "jgrBtn(variant, active, disabled, title, onclick)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 115,
+      "endLine": 121
+    },
+    "jgrCta": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrCta",
+      "signature": "jgrCta(label, variant, pending, disabled, onclick)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 124,
+      "endLine": 130
+    },
+    "jgrPrompt": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrPrompt",
+      "signature": "jgrPrompt(value, placeholder, sections, pending, onsubmit, onchange)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 133,
+      "endLine": 140
+    },
+    "jgrConsole": {
+      "file": "src\\lib\\atlas-manifest.ts",
+      "class": null,
+      "name": "jgrConsole",
+      "signature": "jgrConsole(logs, running, title, completionLabel, sessionAlive, showInput, oninterrupt, onterminate, ondismiss, oninput)",
+      "isStatic": false,
+      "isPrivate": false,
+      "isAsync": false,
+      "isExported": true,
+      "role": "helper",
+      "description": null,
+      "effects": {},
+      "consumers": [],
+      "context": {
+        "requires": [],
+        "provides": []
+      },
+      "bodyHash": "99914b932bd3",
+      "line": 143,
+      "endLine": 154
+    }
+  },
   "classes": {}
 }

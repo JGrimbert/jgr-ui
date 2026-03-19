@@ -1,8 +1,8 @@
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = () => {
-  return new Response(
-    `<!doctype html>
+const PLACEHOLDER = `<!doctype html>
 <html>
 <head><meta charset="utf-8"><style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,7 +19,10 @@ export const GET: RequestHandler = () => {
   }
 </style></head>
 <body>roadmap non générée</body>
-</html>`,
-    { headers: { 'content-type': 'text/html; charset=utf-8' } }
-  );
+</html>`;
+
+export const GET: RequestHandler = () => {
+  const htmlPath = join(process.cwd(), 'ai/roadmap.html');
+  const html = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : PLACEHOLDER;
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
 };
