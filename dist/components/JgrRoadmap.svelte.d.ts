@@ -29,7 +29,6 @@ export type RoadmapData = {
     }>;
 };
 type $$ComponentProps = {
-    src: string;
     roadmap?: RoadmapData;
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;

@@ -3,6 +3,7 @@
     title = '',
     prefix = '',
     labels = [],
+    issues = [],
     state: itemState = 'default',
     actionLabel,
     actionDone = false,
@@ -13,6 +14,7 @@
     title?: string;
     prefix?: string | number;
     labels?: Array<{ name: string; color: string }>;
+    issues?: number[];
     state?: 'default' | 'hover' | 'selected' | 'pending';
     actionLabel?: string;
     actionDone?: boolean;
@@ -45,13 +47,16 @@
     {/if}
   </div>
 
-  {#if labels.length > 0}
+  {#if labels.length > 0 || issues.length > 0}
     <div class="item-labels">
       {#each labels as label}
         <span
           class="label"
           style="background: #{label.color}20; color: #{label.color}; border-color: #{label.color}40"
         >{label.name}</span>
+      {/each}
+      {#each issues as n}
+        <span class="label issue">#{n}</span>
       {/each}
     </div>
   {/if}
@@ -119,5 +124,11 @@
   border: 1px solid transparent;
   font-family: 'Inter', sans-serif;
   letter-spacing: 0.03em;
+}
+.label.issue {
+  background: #1a1a2e;
+  color: #6a6a8a;
+  border-color: #2a2a4a;
+  font-family: 'JetBrains Mono', monospace;
 }
 </style>

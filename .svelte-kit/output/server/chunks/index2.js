@@ -1238,6 +1238,7 @@ export {
   attr_style as a4,
   stringify as a5,
   bind_props as a6,
+  clsx as a7,
   HYDRATION_START as b,
   HYDRATION_START_ELSE as c,
   EFFECT as d,

@@ -1,4 +1,4 @@
-import { a0 as ssr_context, a1 as attr_class, a2 as attr, e as escape_html, a3 as ensure_array_like, a4 as attr_style, a5 as stringify, $ as derived, a6 as bind_props } from "../../../chunks/index2.js";
+import { a0 as ssr_context, a1 as attr_class, a2 as attr, e as escape_html, a3 as ensure_array_like, a4 as attr_style, a5 as stringify, $ as derived, a6 as bind_props, a7 as clsx } from "../../../chunks/index2.js";
 import "clsx";
 function onDestroy(fn) {
   /** @type {SSRContext} */
@@ -31,6 +31,7 @@ function JgrItem($$renderer, $$props) {
       title = "",
       prefix = "",
       labels = [],
+      issues = [],
       state: itemState = "default",
       actionLabel,
       actionDone = false,
@@ -56,13 +57,19 @@ function JgrItem($$renderer, $$props) {
       $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--></div> `);
-    if (labels.length > 0) {
+    if (labels.length > 0 || issues.length > 0) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="item-labels svelte-ymfui8"><!--[-->`);
       const each_array = ensure_array_like(labels);
       for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
         let label = each_array[$$index];
         $$renderer2.push(`<span class="label svelte-ymfui8"${attr_style(`background: #${stringify(label.color)}20; color: #${stringify(label.color)}; border-color: #${stringify(label.color)}40`)}>${escape_html(label.name)}</span>`);
+      }
+      $$renderer2.push(`<!--]--> <!--[-->`);
+      const each_array_1 = ensure_array_like(issues);
+      for (let $$index_1 = 0, $$length = each_array_1.length; $$index_1 < $$length; $$index_1++) {
+        let n = each_array_1[$$index_1];
+        $$renderer2.push(`<span class="label issue svelte-ymfui8">#${escape_html(n)}</span>`);
       }
       $$renderer2.push(`<!--]--></div>`);
     } else {
@@ -242,11 +249,13 @@ function JgrPrompt($$renderer, $$props) {
 function JgrLayout($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let {
+      storageKey = "jgr-ui:panel-widths",
       leftWidth = 300,
       rightWidth = 340,
       height = "100vh",
       leftLabel = "GAUCHE",
       rightLabel = "DROITE",
+      showStrips = true,
       topbar,
       left,
       center,
@@ -264,7 +273,14 @@ function JgrLayout($$renderer, $$props) {
     } else {
       $$renderer2.push("<!--[-1-->");
     }
-    $$renderer2.push(`<!--]--> <div class="layout-body svelte-1so3s8t"><div class="panel-strip panel-strip--left svelte-1so3s8t"><button${attr_class("svelte-1so3s8t", void 0, { "active": true })}><span class="strip-label svelte-1so3s8t">${escape_html(leftLabel)}</span></button></div> `);
+    $$renderer2.push(`<!--]--> <div class="layout-body svelte-1so3s8t">`);
+    if (showStrips) {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<div class="panel-strip panel-strip--left svelte-1so3s8t"><button${attr_class("svelte-1so3s8t", void 0, { "active": true })}><span class="strip-label svelte-1so3s8t">${escape_html(leftLabel)}</span></button></div>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
     if (left) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="layout-panel layout-left svelte-1so3s8t"${attr_style(`width: ${stringify(widths.left)}px`)}>`);
@@ -290,7 +306,14 @@ function JgrLayout($$renderer, $$props) {
     } else {
       $$renderer2.push("<!--[-1-->");
     }
-    $$renderer2.push(`<!--]--> <div class="panel-strip panel-strip--right svelte-1so3s8t"><button${attr_class("svelte-1so3s8t", void 0, { "active": true })}><span class="strip-label svelte-1so3s8t">${escape_html(rightLabel)}</span></button></div></div> `);
+    $$renderer2.push(`<!--]--> `);
+    if (showStrips) {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<div class="panel-strip panel-strip--right svelte-1so3s8t"><button${attr_class("svelte-1so3s8t", void 0, { "active": true })}><span class="strip-label svelte-1so3s8t">${escape_html(rightLabel)}</span></button></div>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--></div> `);
     if (footer) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="layout-footer svelte-1so3s8t">`);
@@ -368,6 +391,7 @@ function JgrTabList($$renderer, $$props) {
             prefix: item.prefix,
             title: item.label,
             labels: item.labels,
+            issues: item.issues,
             state: current().selectedId === item.id ? "selected" : "default",
             actionLabel: item.actionLabel,
             actionLoading: item.actionLoading,
@@ -376,9 +400,12 @@ function JgrTabList($$renderer, $$props) {
             onselect: () => onselect?.(currentId(), item)
           });
           $$renderer2.push(`<!----> `);
-          if (item.ondelete) {
+          if (item.onclose) {
             $$renderer2.push("<!--[0-->");
-            $$renderer2.push(`<button class="tl-del svelte-2m7cge" title="Supprimer">✕</button>`);
+            $$renderer2.push(`<button${attr_class("tl-del svelte-2m7cge", void 0, {
+              "tl-del-done": item.onclose.done,
+              "tl-del-vis": item.onclose.loading || item.onclose.done
+            })}${attr("disabled", item.onclose.loading || item.onclose.done, true)} title="Fermer">${escape_html(item.onclose.done ? "✓" : item.onclose.loading ? "…" : "✕")}</button>`);
           } else {
             $$renderer2.push("<!--[-1-->");
           }
@@ -404,6 +431,353 @@ function JgrTabList($$renderer, $$props) {
       $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--></div>`);
+  });
+}
+function JgrDag($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let { roadmap, activeIds = [] } = $$props;
+    const R = 22;
+    const RH = 30;
+    const RS = 34;
+    const LH = 160;
+    const NW = 160;
+    const MX = 160;
+    const MY = 80;
+    const SKILL_COLOR = {
+      domain: "#9181f9",
+      entrypoint: "#c97844",
+      api: "#a8b4f0",
+      integration: "#c47890",
+      flow: "#d4a860",
+      utility: "#7c6af7",
+      internal: "#555566"
+    };
+    const levelMap = derived(() => {
+      const map = /* @__PURE__ */ new Map();
+      const visiting = /* @__PURE__ */ new Set();
+      function lvl(id) {
+        if (map.has(id)) return map.get(id);
+        if (visiting.has(id)) return 0;
+        visiting.add(id);
+        const s = roadmap.steps.find((x) => x.id === id);
+        const l = !s || s.dependsOnSteps.length === 0 ? 0 : Math.max(...s.dependsOnSteps.map(lvl)) + 1;
+        visiting.delete(id);
+        map.set(id, l);
+        return l;
+      }
+      for (const s of roadmap.steps) lvl(s.id);
+      return map;
+    });
+    const posMap = derived(() => {
+      const byLevel = /* @__PURE__ */ new Map();
+      for (const [id, lv] of levelMap()) {
+        if (!byLevel.has(lv)) byLevel.set(lv, []);
+        byLevel.get(lv).push(id);
+      }
+      for (const ids of byLevel.values()) ids.sort((a, b) => a - b);
+      const pos = /* @__PURE__ */ new Map();
+      for (const [lv, ids] of byLevel) {
+        ids.forEach((id, i) => pos.set(id, { x: MX + i * NW, y: MY + lv * LH }));
+      }
+      return pos;
+    });
+    const distinctLevels = derived(() => [...new Set(levelMap().values())].sort((a, b) => a - b));
+    const maxX = derived(() => {
+      let m = 0;
+      for (const p of posMap().values()) m = Math.max(m, p.x);
+      return m + MX;
+    });
+    const edges = derived(() => roadmap.steps.flatMap((s) => s.dependsOnSteps.map((dep) => ({ from: dep, to: s.id }))));
+    function color(skill) {
+      return SKILL_COLOR[skill] ?? "#555566";
+    }
+    function edgePath(from, to) {
+      const p1 = posMap().get(from), p2 = posMap().get(to);
+      if (!p1 || !p2) return "";
+      const dx = p2.x - p1.x, dy = p2.y - p1.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 1) return "";
+      const nx = dx / d, ny = dy / d;
+      const x1 = p1.x + nx * R, y1 = p1.y + ny * R;
+      const x2 = p2.x - nx * R, y2 = p2.y - ny * R;
+      const my = (y1 + y2) / 2;
+      return `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
+    }
+    function edgeCls(from, to) {
+      if (!activeIds.length) return "orb-line";
+      return activeIds.includes(from) || activeIds.includes(to) ? "orb-line highlight" : "orb-line dim";
+    }
+    function vertexCls(id, isSpine) {
+      const base = isSpine ? "vertex spine-node" : "vertex";
+      return activeIds.includes(id) ? base + " active" : base;
+    }
+    function nodeLabel(step) {
+      return step.concept ?? step.label.split(": ")[1] ?? step.label;
+    }
+    let tx = 0;
+    let ty = 0;
+    let sc = 1;
+    $$renderer2.push(`<svg class="dag-svg svelte-xki7h7" xmlns="http://www.w3.org/2000/svg" aria-label="DAG Roadmap"><defs class="svelte-xki7h7"><marker id="dag-arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto-start-reverse" class="svelte-xki7h7"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9181f9" opacity="0.7" class="svelte-xki7h7"></path></marker><filter id="dag-glow" class="svelte-xki7h7"><feGaussianBlur stdDeviation="3" result="blur" class="svelte-xki7h7"></feGaussianBlur><feMerge class="svelte-xki7h7"><feMergeNode in="blur" class="svelte-xki7h7"></feMergeNode><feMergeNode in="SourceGraphic" class="svelte-xki7h7"></feMergeNode></feMerge></filter></defs><g${attr("transform", `translate(${stringify(tx)},${stringify(ty)}) scale(${stringify(sc)})`)} class="svelte-xki7h7"><g class="level-lines svelte-xki7h7"><!--[-->`);
+    const each_array = ensure_array_like(distinctLevels());
+    for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
+      let lv = each_array[$$index];
+      const y = MY + lv * LH;
+      $$renderer2.push(`<line x1="0"${attr("y1", y)}${attr("x2", maxX())}${attr("y2", y)} stroke="#4d3fa0" stroke-width="0.3" opacity="0.2" stroke-dasharray="4,8" class="svelte-xki7h7"></line><text x="8"${attr("y", y - 6)} font-size="9" fill="#7c6af7" opacity="0.5" font-family="monospace" class="svelte-xki7h7">L${escape_html(lv)}</text>`);
+    }
+    $$renderer2.push(`<!--]--></g><g class="orb-lines svelte-xki7h7"><!--[-->`);
+    const each_array_1 = ensure_array_like(edges());
+    for (let $$index_1 = 0, $$length = each_array_1.length; $$index_1 < $$length; $$index_1++) {
+      let { from, to } = each_array_1[$$index_1];
+      $$renderer2.push(`<path${attr_class(clsx(edgeCls(from, to)), "svelte-xki7h7")}${attr("d", edgePath(from, to))} marker-end="url(#dag-arrow)"></path>`);
+    }
+    $$renderer2.push(`<!--]--></g><g class="vertices svelte-xki7h7"><!--[-->`);
+    const each_array_2 = ensure_array_like(roadmap.steps);
+    for (let $$index_2 = 0, $$length = each_array_2.length; $$index_2 < $$length; $$index_2++) {
+      let step = each_array_2[$$index_2];
+      const pos = posMap().get(step.id);
+      if (pos) {
+        $$renderer2.push("<!--[0-->");
+        const c = color(step.skill);
+        $$renderer2.push(`<g${attr_class(clsx(vertexCls(step.id, step.isSpine)), "svelte-xki7h7")}${attr("transform", `translate(${stringify(pos.x)},${stringify(pos.y)})`)} role="button" tabindex="0"><title class="svelte-xki7h7">${escape_html(step.label)}
+
+Nodes:
+${escape_html(step.nodes.join("\n"))}
+
+Files:
+${escape_html(step.files.join("\n"))}</title>`);
+        if (step.isSpine) {
+          $$renderer2.push("<!--[0-->");
+          $$renderer2.push(`<circle${attr("r", RS)} fill="none" stroke="#f5c542" stroke-width="1.2" class="spine-ring svelte-xki7h7"></circle>`);
+        } else {
+          $$renderer2.push("<!--[-1-->");
+        }
+        $$renderer2.push(`<!--]--><circle${attr("r", RH)}${attr("fill", c)} opacity="0.06" class="halo svelte-xki7h7"></circle><circle${attr("r", R)} fill="#12121a"${attr("stroke", c)} stroke-width="1.2" class="vertex-circle svelte-xki7h7"></circle><text y="1" text-anchor="middle" dominant-baseline="middle" font-size="11"${attr("fill", c)} font-weight="600" class="step-num svelte-xki7h7">${escape_html(step.id)}</text></g>`);
+      } else {
+        $$renderer2.push("<!--[-1-->");
+      }
+      $$renderer2.push(`<!--]-->`);
+    }
+    $$renderer2.push(`<!--]--></g><g class="labels svelte-xki7h7" aria-hidden="true"><!--[-->`);
+    const each_array_3 = ensure_array_like(roadmap.steps);
+    for (let $$index_3 = 0, $$length = each_array_3.length; $$index_3 < $$length; $$index_3++) {
+      let step = each_array_3[$$index_3];
+      const pos = posMap().get(step.id);
+      if (pos) {
+        $$renderer2.push("<!--[0-->");
+        const c = color(step.skill);
+        $$renderer2.push(`<g${attr("transform", `translate(${stringify(pos.x)},${stringify(pos.y + R + 16)})`)} class="svelte-xki7h7"><text text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.75)" font-family="monospace" class="svelte-xki7h7">${escape_html(nodeLabel(step))}</text><text y="12" text-anchor="middle" font-size="7.5"${attr("fill", c)} opacity="0.55" font-family="monospace" class="svelte-xki7h7">${escape_html(step.skill)}</text></g>`);
+      } else {
+        $$renderer2.push("<!--[-1-->");
+      }
+      $$renderer2.push(`<!--]-->`);
+    }
+    $$renderer2.push(`<!--]--></g></g></svg>`);
+  });
+}
+function JgrRoadmap($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    const SKILL_COLOR = {
+      domain: "9181f9",
+      entrypoint: "c97844",
+      api: "a8b4f0",
+      integration: "c47890",
+      flow: "d4a860",
+      utility: "7c6af7",
+      internal: "555566"
+    };
+    let {
+      roadmap,
+      status = "ok",
+      generatedAt,
+      onissuefilter
+    } = $$props;
+    let activeTab = "tasks";
+    let selectedItemId = null;
+    let activeIds = [];
+    function dominantSkill(steps) {
+      const counts = {};
+      for (const s of steps) counts[s.skill] = (counts[s.skill] ?? 0) + 1;
+      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "internal";
+    }
+    function stepKey(step, depth) {
+      const file = step.files?.[0];
+      if (file) {
+        const parts = file.replace(/\\/g, "/").split("/").filter((p) => p && !p.startsWith("+") && !p.includes("."));
+        const idx = parts.length - 1 - depth;
+        if (idx >= 0) return parts[idx];
+        if (parts.length > 0) return parts[parts.length - 1];
+      }
+      return step.label.split(": ")[1] || step.label || "misc";
+    }
+    function buildStackItems(steps, depth) {
+      const groups = /* @__PURE__ */ new Map();
+      for (const step of steps) {
+        const k = depth === 0 ? step.coalNodeId ?? step.concept ?? stepKey(step, 0) : depth === 1 ? stepKey(step, 1) : step.skill || "internal";
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(step);
+      }
+      return [...groups.entries()].sort((a, b) => Math.min(...a[1].map((s) => s.id)) - Math.min(...b[1].map((s) => s.id))).map(([key, ss]) => {
+        const issueNums = [...new Set(ss.flatMap((s) => s.issues ?? []))];
+        return {
+          id: `stack-${depth}-${key}`,
+          label: key,
+          prefix: String(ss.length),
+          labels: [
+            {
+              name: dominantSkill(ss),
+              color: SKILL_COLOR[dominantSkill(ss)] ?? "555566"
+            },
+            ...issueNums.map((n) => ({ name: `#${n}`, color: "446688" }))
+          ],
+          issues: issueNums
+        };
+      });
+    }
+    const itemSteps = derived(() => {
+      const allSteps = roadmap?.steps ?? [];
+      const hasIssueSteps = allSteps.some((s) => (s.issues?.length ?? 0) > 0);
+      const steps = hasIssueSteps ? allSteps.filter((s) => (s.issues?.length ?? 0) > 0) : allSteps;
+      const map = /* @__PURE__ */ new Map();
+      steps.filter((s) => (s.issues?.length ?? 0) > 0).forEach((s) => s.issues.forEach((n) => map.set(`task-${s.id}-${n}`, [s.id])));
+      steps.forEach((s) => map.set(String(s.id), [s.id]));
+      for (const depth of [0, 1, 2]) {
+        const groups = /* @__PURE__ */ new Map();
+        for (const step of steps) {
+          const k = depth === 0 ? step.coalNodeId ?? step.concept ?? stepKey(step, 0) : depth === 1 ? stepKey(step, 1) : step.skill || "internal";
+          if (!groups.has(k)) groups.set(k, []);
+          groups.get(k).push(step);
+        }
+        for (const [key, ss] of groups) {
+          map.set(`stack-${depth}-${key}`, ss.map((s) => s.id));
+        }
+      }
+      return map;
+    });
+    function handleSelect(_tabId, item) {
+      if (selectedItemId === item.id) {
+        selectedItemId = null;
+        activeIds = [];
+        onissuefilter?.([]);
+      } else {
+        selectedItemId = item.id;
+        activeIds = itemSteps().get(item.id) ?? [];
+        onissuefilter?.(item.issues ?? []);
+      }
+    }
+    const tabs = derived(() => {
+      const allSteps = roadmap?.steps ?? [];
+      const hasIssueSteps = allSteps.some((s) => (s.issues?.length ?? 0) > 0);
+      const steps = hasIssueSteps ? allSteps.filter((s) => (s.issues?.length ?? 0) > 0) : allSteps;
+      const taskItems = steps.filter((s) => (s.issues?.length ?? 0) > 0).flatMap((s) => s.issues.map((n) => ({
+        id: `task-${s.id}-${n}`,
+        label: s.label,
+        prefix: `#${n}`,
+        labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? "555566" }],
+        issues: [n]
+      })));
+      const stepItems = steps.map((s) => ({
+        id: String(s.id),
+        label: s.label,
+        prefix: s.isSpine ? "◉" : String(s.id),
+        labels: [
+          { name: s.skill, color: SKILL_COLOR[s.skill] ?? "555566" },
+          ...(s.issues ?? []).map((n) => ({ name: `#${n}`, color: "446688" }))
+        ],
+        issues: s.issues ?? []
+      }));
+      return [
+        {
+          id: "tasks",
+          label: "Tasks",
+          items: taskItems,
+          empty: "Aucun step lié à des issues"
+        },
+        {
+          id: "steps",
+          label: "Steps",
+          items: stepItems,
+          empty: "Aucun step"
+        },
+        {
+          id: "etapes",
+          label: "Étapes",
+          items: buildStackItems(steps, 0),
+          empty: "Aucune donnée"
+        },
+        {
+          id: "dossiers",
+          label: "Dossiers",
+          items: buildStackItems(steps, 1),
+          empty: "Aucune donnée"
+        },
+        {
+          id: "domaines",
+          label: "Domaines",
+          items: buildStackItems(steps, 2),
+          empty: "Aucune donnée"
+        }
+      ];
+    });
+    const tabsWithSelection = derived(() => tabs().map((t) => ({ ...t, selectedId: selectedItemId ?? void 0 })));
+    $$renderer2.push(`<div class="roadmap svelte-4a70x3">`);
+    {
+      let topbar = function($$renderer3) {
+        $$renderer3.push(`<div class="topbar svelte-4a70x3"><span class="topbar-title svelte-4a70x3">DAG Roadmap</span> `);
+        if (roadmap?.stats) {
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<span class="topbar-stats svelte-4a70x3">${escape_html(roadmap.stats.steps)} steps · ${escape_html(roadmap.stats.nodes)} nodes · ${escape_html(roadmap.stats.levels)} levels</span>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--> `);
+        if (generatedAt) {
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<span class="topbar-date svelte-4a70x3">${escape_html(generatedAt)}</span>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--> <button class="topbar-btn svelte-4a70x3"${attr("disabled", status === "generating", true)} title="(Re)générer la roadmap">${escape_html(status === "generating" ? "···" : "↺")}</button></div>`);
+      }, center = function($$renderer3) {
+        $$renderer3.push(`<div class="dag-wrap svelte-4a70x3">`);
+        if (status === "loading") {
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<div class="placeholder svelte-4a70x3">Chargement···</div>`);
+        } else if (status === "generating") {
+          $$renderer3.push("<!--[1-->");
+          $$renderer3.push(`<div class="placeholder svelte-4a70x3">Génération de la roadmap···</div>`);
+        } else if (status === "empty") {
+          $$renderer3.push("<!--[2-->");
+          $$renderer3.push(`<div class="placeholder dim svelte-4a70x3">Roadmap non générée · cliquez sur ↺</div>`);
+        } else if (status === "error") {
+          $$renderer3.push("<!--[3-->");
+          $$renderer3.push(`<div class="placeholder err svelte-4a70x3">Erreur · <button class="svelte-4a70x3">Réessayer</button></div>`);
+        } else if (roadmap) {
+          $$renderer3.push("<!--[4-->");
+          JgrDag($$renderer3, { roadmap, activeIds });
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--></div>`);
+      }, right = function($$renderer3) {
+        JgrTabList($$renderer3, {
+          tabs: tabsWithSelection(),
+          activeTab,
+          ontabchange: (id) => activeTab = id,
+          onselect: handleSelect
+        });
+      };
+      JgrLayout($$renderer2, {
+        storageKey: "jgr-ui:roadmap-layout",
+        height: "100%",
+        rightWidth: 300,
+        rightLabel: "ROADMAP",
+        showStrips: false,
+        topbar,
+        center,
+        right
+      });
+    }
+    $$renderer2.push(`<!----></div>`);
   });
 }
 function _page($$renderer, $$props) {
@@ -688,6 +1062,84 @@ function _page($$renderer, $$props) {
       { label: "CI", value: "✓ passing", color: "#4caf50" },
       { label: "Tokens", value: "18.4k / 200k", color: "#888" }
     ];
+    const mockRoadmap = {
+      steps: [
+        {
+          id: 1,
+          label: "domain: AuthService",
+          skill: "domain",
+          nodes: ["AuthService", "TokenManager"],
+          files: ["src/auth/service.ts"],
+          rationale: "Authentification centrale",
+          dependsOnSteps: [],
+          isSpine: true,
+          issues: [12, 14],
+          concept: "auth"
+        },
+        {
+          id: 2,
+          label: "api: UserController",
+          skill: "api",
+          nodes: ["UserController"],
+          files: ["src/api/users.ts"],
+          rationale: "API REST utilisateurs",
+          dependsOnSteps: [1],
+          issues: [12],
+          concept: "users"
+        },
+        {
+          id: 3,
+          label: "flow: SessionMiddleware",
+          skill: "flow",
+          nodes: ["SessionMiddleware"],
+          files: ["src/middleware/session.ts"],
+          rationale: "Propagation session",
+          dependsOnSteps: [1],
+          isSpine: true,
+          concept: "auth"
+        },
+        {
+          id: 4,
+          label: "utility: TokenHelper",
+          skill: "utility",
+          nodes: ["TokenHelper"],
+          files: ["src/utils/token.ts"],
+          rationale: "Helpers JWT",
+          dependsOnSteps: [1],
+          issues: [14]
+        },
+        {
+          id: 5,
+          label: "integration: GithubOAuth",
+          skill: "integration",
+          nodes: ["GithubOAuth"],
+          files: ["src/oauth/github.ts"],
+          rationale: "OAuth GitHub",
+          dependsOnSteps: [3],
+          isSpine: true,
+          issues: [12],
+          concept: "oauth"
+        }
+      ],
+      spine: ["AuthService", "SessionMiddleware", "GithubOAuth"],
+      stats: { nodes: 47, edges: 32, levels: 4, steps: 5 },
+      concepts: [
+        {
+          id: "auth",
+          name: "Authentication",
+          skill: "domain",
+          nodes: ["AuthService", "TokenManager"]
+        },
+        {
+          id: "oauth",
+          name: "OAuth",
+          skill: "integration",
+          nodes: ["GithubOAuth"]
+        }
+      ]
+    };
+    let demoRoadmapStatus = "ok";
+    let demoGeneratedAt = (/* @__PURE__ */ new Date()).toLocaleTimeString("fr-FR");
     let $$settled = true;
     let $$inner_renderer;
     function $$render_inner($$renderer3) {
@@ -743,6 +1195,7 @@ function _page($$renderer, $$props) {
         };
         JgrLayout($$renderer3, {
           height: "280px",
+          storageKey: "demo:layout",
           leftWidth: 180,
           rightWidth: 180,
           topbar,
@@ -802,6 +1255,12 @@ function _page($$renderer, $$props) {
           children
         });
       }
+      $$renderer3.push(`<!----></div></section> <section><h2 class="section-title svelte-1du1zi4">JgrRoadmap + JgrTabList</h2> <div style="height: 420px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden;">`);
+      JgrRoadmap($$renderer3, {
+        roadmap: mockRoadmap,
+        status: demoRoadmapStatus,
+        generatedAt: demoGeneratedAt
+      });
       $$renderer3.push(`<!----></div></section> <div class="divider svelte-1du1zi4"></div> <h2 class="section-title svelte-1du1zi4" style="font-size: 0.8rem; color: var(--text-secondary);">JgrTabList</h2> <section><h3 class="demo-title svelte-1du1zi4">1 — Liste simple, 3 onglets</h3> <p class="demo-desc svelte-1du1zi4">Onglets TODO / Issues / Tasks avec items basiques. Recherche filtrante intégrée.</p> <div class="demo-box svelte-1du1zi4">`);
       JgrTabList($$renderer3, {
         tabs: demo1Tabs,

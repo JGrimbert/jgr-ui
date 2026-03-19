@@ -5,6 +5,7 @@ type $$ComponentProps = {
         name: string;
         color: string;
     }>;
+    issues?: number[];
     state?: 'default' | 'hover' | 'selected' | 'pending';
     actionLabel?: string;
     actionDone?: boolean;
