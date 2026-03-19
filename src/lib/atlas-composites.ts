@@ -11,7 +11,7 @@
  */
 
 import type { ListItem, TabDef, RoadmapData } from './atlas-manifest';
-import { jgrItem, jgrLayout } from './atlas-manifest';
+import { jgrItem, jgrLayout, jgrDag } from './atlas-manifest';
 
 // JgrTabList dépend de JgrItem (l'utilise pour chaque ligne de liste)
 void jgrItem;
@@ -24,12 +24,12 @@ export function jgrTabList(
   onselect?: (tabId: string, item: ListItem) => void,
 ): void {}
 
-// JgrRoadmap dépend de JgrLayout + JgrTabList
+// JgrRoadmap dépend de JgrLayout + JgrTabList + JgrDag
 void jgrLayout;
+void jgrDag;
 
-/** Visualiseur DAG Roadmap avec iframe + panneau latéral JgrTabList. */
+/** Visualiseur DAG Roadmap avec JgrDag + panneau latéral JgrTabList. */
 export function jgrRoadmap(
-  src: string,
   roadmap?: RoadmapData,
   status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error',
   generatedAt?: string,
