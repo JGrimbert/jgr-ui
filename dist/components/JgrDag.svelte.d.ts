@@ -1,0 +1,9 @@
+import type { RoadmapData } from './JgrRoadmap.svelte';
+type $$ComponentProps = {
+    roadmap: RoadmapData;
+    activeIds?: number[];
+    onNodeClick?: (id: number) => void;
+};
+declare const JgrDag: import("svelte").Component<$$ComponentProps, {}, "">;
+type JgrDag = ReturnType<typeof JgrDag>;
+export default JgrDag;
