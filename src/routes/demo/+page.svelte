@@ -61,6 +61,14 @@
     { id: 't3', prefix: 'P1 #15', label: 'Mise à jour dépendances',          labels: [{ name: 'Mergée', color: '4caf50' }], dimmed: true },
   ];
 
+  // ── Démo 0 : pending statique ────────────────────────────────────────────────
+  let demo0Tab = $state('todos');
+
+  const demo0Tabs: TabDef[] = [
+    { id: 'todos',  label: 'TODO',   items: todoItems,  pending: true,  pendingLabel: 'Création task…', empty: 'Aucun TODO'           },
+    { id: 'issues', label: 'Issues', items: issueItems, pending: false,                                  empty: 'Aucune issue ouverte' },
+  ];
+
   // ── Démo 1 : liste simple ────────────────────────────────────────────────────
   let demo1Tab = $state('todos');
 
@@ -74,6 +82,7 @@
   let demo2Tab = $state('todos');
   let demo2TodoPending = $state(false);
   let demo2IssuePending = $state(false);
+  let demo2NewIssuePending = $state(false);
   let demo2TodoDone: Record<string, boolean> = $state({});
   let demo2ClosedNums = $state(new Set<string>());
 
@@ -92,6 +101,12 @@
       demo2ClosedNums = new Set([...demo2ClosedNums, id]);
       demo2IssuePending = false;
     }, 1200);
+  }
+
+  function demo2CreateIssue() {
+    if (demo2NewIssuePending || demo2IssuePending) return;
+    demo2NewIssuePending = true;
+    setTimeout(() => { demo2NewIssuePending = false; }, 1500);
   }
 
   const demo2TodoItems: ListItem[] = todoItems.map(i => ({
@@ -122,6 +137,7 @@
         onaction: () => demo2CreateTask(i.id),
       })),
       pending: demo2TodoPending,
+      pendingLabel: 'Création task…',
       empty: 'Aucun TODO',
     },
     {
@@ -132,8 +148,9 @@
         actionDone: demo2ClosedNums.has(i.id),
         onaction: () => demo2CloseIssue(i.id),
       })),
-      pending: demo2IssuePending,
-      cta: { label: '+ Issue', onclick: () => alert('Nouvelle issue') },
+      pending: demo2IssuePending || demo2NewIssuePending,
+      pendingLabel: demo2NewIssuePending ? 'Création issue…' : 'Fermeture issue…',
+      cta: { label: '+ Issue', onclick: demo2CreateIssue },
       empty: 'Aucune issue ouverte',
     },
   ]);
@@ -214,30 +231,47 @@
   }
 </script>
 
-<div style="padding: 2rem; max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem;">
+<div style="padding: 2rem 3rem; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem;">
   <h1 style="font-size: 1.2rem; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">jgr-ui / demo</h1>
 
-  <!-- ── JgrCta ── -->
+  <!-- ── Démo 0 : JgrTabList pending — spinner jgrCTA en premier slot ── -->
   <section>
-    <h2 class="section-title">JgrCta</h2>
-    <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-      <JgrCta label="Primary"  onclick={togglePending1} pending={pending1} />
-      <JgrCta label="Ghost"    variant="ghost" onclick={togglePending2} pending={pending2} />
-      <JgrCta label="Danger"   variant="danger" />
-      <JgrCta label="Disabled" disabled />
-      <JgrCta label="Pending"  pending={pendingStatic} />
+    <h3 class="demo-title">0 — État pending — spinner jgrCTA en premier slot</h3>
+    <p class="demo-desc">
+      L'onglet <strong>TODO</strong> est en état <code>pending</code> statique : le premier slot de la liste
+      affiche un <code>JgrCta</code> en mode spinner. Basculer sur <strong>Issues</strong> pour voir l'état normal.
+    </p>
+    <div class="demo-box">
+      <JgrTabList
+        tabs={demo0Tabs}
+        activeTab={demo0Tab}
+        ontabchange={id => demo0Tab = id}
+      />
     </div>
   </section>
 
-  <!-- ── JgrItem ── -->
-  <section>
-    <h2 class="section-title">JgrItem</h2>
-    <div style="border: 1px solid var(--border); border-radius: 3px; overflow: hidden; max-width: 420px;">
-      <JgrItem prefix="#1" title="Créer le repo jgr-ui" labels={[{ name: 'feature', color: '7c6af7' }]} />
-      <JgrItem prefix="#2" title="Migrer CtaButton → JgrCta" state="selected" actionLabel="Done" actionDone />
-      <JgrItem prefix="#3" title="Tâche en cours" state="pending" actionLabel="Run" actionLoading />
-    </div>
-  </section>
+  <!-- ── JgrCta + JgrItem ── -->
+  <div class="demo-grid">
+    <section>
+      <h2 class="section-title">JgrCta</h2>
+      <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+        <JgrCta label="Primary"  onclick={togglePending1} pending={pending1} />
+        <JgrCta label="Ghost"    variant="ghost" onclick={togglePending2} pending={pending2} />
+        <JgrCta label="Danger"   variant="danger" />
+        <JgrCta label="Disabled" disabled />
+        <JgrCta label="Pending"  pending={pendingStatic} />
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">JgrItem</h2>
+      <div style="border: 1px solid var(--border); border-radius: 3px; overflow: hidden;">
+        <JgrItem prefix="#1" title="Créer le repo jgr-ui" labels={[{ name: 'feature', color: '7c6af7' }]} />
+        <JgrItem prefix="#2" title="Migrer CtaButton → JgrCta" state="selected" actionLabel="Done" actionDone />
+        <JgrItem prefix="#3" title="Tâche en cours" state="pending" actionLabel="Run" actionLoading />
+      </div>
+    </section>
+  </div>
 
   <!-- ── JgrLayout ── -->
   <section style="padding: 0; overflow: hidden;">
@@ -308,105 +342,107 @@
   <div class="divider"></div>
   <h2 class="section-title" style="font-size: 0.8rem; color: var(--text-secondary);">JgrTabList</h2>
 
-  <!-- ── Démo 1 : liste simple, 3 onglets ── -->
-  <section>
-    <h3 class="demo-title">1 — Liste simple, 3 onglets</h3>
-    <p class="demo-desc">Onglets TODO / Issues / Tasks avec items basiques. Recherche filtrante intégrée.</p>
-    <div class="demo-box">
-      <JgrTabList
-        tabs={demo1Tabs}
-        activeTab={demo1Tab}
-        ontabchange={id => demo1Tab = id}
-      />
-    </div>
-  </section>
+  <!-- ── Démos 1 + 2 ── -->
+  <div class="demo-grid">
+    <section>
+      <h3 class="demo-title">1 — Liste simple, 3 onglets</h3>
+      <p class="demo-desc">Onglets TODO / Issues / Tasks avec items basiques. Recherche filtrante intégrée.</p>
+      <div class="demo-box">
+        <JgrTabList
+          tabs={demo1Tabs}
+          activeTab={demo1Tab}
+          ontabchange={id => demo1Tab = id}
+        />
+      </div>
+    </section>
 
-  <!-- ── Démo 2 : CTA + pending ── -->
-  <section>
-    <h3 class="demo-title">2 — CTA header + état pending (stale)</h3>
-    <p class="demo-desc">
-      Chaque onglet peut avoir un CTA dans la barre de tabs.<br/>
-      L'action sur un item met toute la liste en stale jusqu'à la réponse.
-      Cliquer <strong>→ Task</strong> ou <strong>Fermer</strong> pour tester.
-    </p>
-    <div class="demo-box">
-      <JgrTabList
-        tabs={demo2Tabs}
-        activeTab={demo2Tab}
-        ontabchange={id => demo2Tab = id}
-      />
-    </div>
-  </section>
+    <section>
+      <h3 class="demo-title">2 — CTA header + état pending (stale)</h3>
+      <p class="demo-desc">
+        Chaque onglet peut avoir un CTA dans la barre de tabs.<br/>
+        L'action sur un item met toute la liste en stale jusqu'à la réponse.
+        Cliquer <strong>→ Task</strong> ou <strong>Fermer</strong> pour tester.
+      </p>
+      <div class="demo-box">
+        <JgrTabList
+          tabs={demo2Tabs}
+          activeTab={demo2Tab}
+          ontabchange={id => demo2Tab = id}
+        />
+      </div>
+    </section>
+  </div>
 
-  <!-- ── Démo 3 : detail snippet ── -->
-  <section>
-    <h3 class="demo-title">3 — Snippet <code>detail</code> — panel inline sous l'item sélectionné</h3>
-    <p class="demo-desc">
-      Cliquer sur un TODO affiche le contexte de code en-dessous.<br/>
-      Le snippet <code>detail(tabId, itemId)</code> est rendu inline après l'item actif.
-    </p>
-    <div class="demo-box">
-      <JgrTabList
-        tabs={demo3Tabs}
-        activeTab={demo3Tab}
-        ontabchange={id => { demo3Tab = id; demo3SelId = undefined; }}
-        onselect={(_tabId, item) => {
-          demo3SelId = demo3SelId === item.id ? undefined : item.id;
-        }}
-      >
-        {#snippet detail(tabId, itemId)}
-          {#if tabId === 'todos' && demo3Details[itemId]}
-            {@const d = demo3Details[itemId]}
-            <div class="detail-panel">
-              <div class="detail-header">
-                <span class="detail-file">{d.file}</span>
-                <span class="detail-line">:{d.line}</span>
-              </div>
-              <pre class="detail-code">{d.excerpt}</pre>
-            </div>
-          {:else if tabId === 'issues'}
-            <div class="detail-panel">
-              <div class="detail-header">
-                <span class="detail-file">Issue #{itemId}</span>
-              </div>
-              <p class="detail-text">Détail complet de l'issue, labels, assignees, body…</p>
-            </div>
-          {/if}
-        {/snippet}
-      </JgrTabList>
-    </div>
-  </section>
-
-  <!-- ── Démo 4 : customcontent slot ── -->
-  <section>
-    <h3 class="demo-title">4 — Snippet <code>customcontent</code> — onglet à contenu libre</h3>
-    <p class="demo-desc">
-      Un onglet sans <code>items</code> reçoit le snippet <code>customcontent(tabId)</code>.<br/>
-      Ici l'onglet <strong>Status</strong> affiche un panneau métier arbitraire.
-    </p>
-    <div class="demo-box">
-      <JgrTabList
-        tabs={demo4Tabs}
-        activeTab={demo4Tab}
-        ontabchange={id => demo4Tab = id}
-        onselect={(_tabId, item) => demo4SelIssue = item.id}
-      >
-        {#snippet customcontent(tabId)}
-          {#if tabId === 'custom'}
-            <div class="status-panel">
-              <div class="status-title">Projet courant</div>
-              {#each statusLines as row}
-                <div class="status-row">
-                  <span class="status-key">{row.label}</span>
-                  <span class="status-val" style="color: {row.color}">{row.value}</span>
+  <!-- ── Démos 3 + 4 ── -->
+  <div class="demo-grid">
+    <section>
+      <h3 class="demo-title">3 — Snippet <code>detail</code> — panel inline sous l'item sélectionné</h3>
+      <p class="demo-desc">
+        Cliquer sur un TODO affiche le contexte de code en-dessous.<br/>
+        Le snippet <code>detail(tabId, itemId)</code> est rendu inline après l'item actif.
+      </p>
+      <div class="demo-box">
+        <JgrTabList
+          tabs={demo3Tabs}
+          activeTab={demo3Tab}
+          ontabchange={id => { demo3Tab = id; demo3SelId = undefined; }}
+          onselect={(_tabId, item) => {
+            demo3SelId = demo3SelId === item.id ? undefined : item.id;
+          }}
+        >
+          {#snippet detail(tabId, itemId)}
+            {#if tabId === 'todos' && demo3Details[itemId]}
+              {@const d = demo3Details[itemId]}
+              <div class="detail-panel">
+                <div class="detail-header">
+                  <span class="detail-file">{d.file}</span>
+                  <span class="detail-line">:{d.line}</span>
                 </div>
-              {/each}
-            </div>
-          {/if}
-        {/snippet}
-      </JgrTabList>
-    </div>
-  </section>
+                <pre class="detail-code">{d.excerpt}</pre>
+              </div>
+            {:else if tabId === 'issues'}
+              <div class="detail-panel">
+                <div class="detail-header">
+                  <span class="detail-file">Issue #{itemId}</span>
+                </div>
+                <p class="detail-text">Détail complet de l'issue, labels, assignees, body…</p>
+              </div>
+            {/if}
+          {/snippet}
+        </JgrTabList>
+      </div>
+    </section>
+
+    <section>
+      <h3 class="demo-title">4 — Snippet <code>customcontent</code> — onglet à contenu libre</h3>
+      <p class="demo-desc">
+        Un onglet sans <code>items</code> reçoit le snippet <code>customcontent(tabId)</code>.<br/>
+        Ici l'onglet <strong>Status</strong> affiche un panneau métier arbitraire.
+      </p>
+      <div class="demo-box">
+        <JgrTabList
+          tabs={demo4Tabs}
+          activeTab={demo4Tab}
+          ontabchange={id => demo4Tab = id}
+          onselect={(_tabId, item) => demo4SelIssue = item.id}
+        >
+          {#snippet customcontent(tabId)}
+            {#if tabId === 'custom'}
+              <div class="status-panel">
+                <div class="status-title">Projet courant</div>
+                {#each statusLines as row}
+                  <div class="status-row">
+                    <span class="status-key">{row.label}</span>
+                    <span class="status-val" style="color: {row.color}">{row.value}</span>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          {/snippet}
+        </JgrTabList>
+      </div>
+    </section>
+  </div>
 
   <!-- ── Démo 5 : chargement + vide ── -->
   <section>
@@ -484,6 +520,11 @@
 .demo-desc strong {
   color: var(--text-secondary, #888);
 }
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
 .demo-box {
   height: 300px;
   border: 1px solid var(--border);
@@ -491,7 +532,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  max-width: 420px;
 }
 .demo-row {
   display: flex;

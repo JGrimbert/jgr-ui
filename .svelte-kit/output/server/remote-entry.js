@@ -1,10 +1,9 @@
 import { get_request_store, with_request_store } from "@sveltejs/kit/internal/server";
-import { parse } from "devalue";
 import { error, json } from "@sveltejs/kit";
-import { u as stringify_remote_arg, M as MUTATIVE_METHODS, v as create_field_proxy, w as normalize_issue, x as set_nested_value, y as flatten_issues, z as deep_set, k as stringify, f as create_remote_key, h as handle_error_and_jsonify } from "./chunks/shared.js";
+import { w as stringify_remote_arg, M as MUTATIVE_METHODS, x as create_field_proxy, y as throw_on_old_property_access, z as normalize_issue, A as set_nested_value, B as flatten_issues, C as deep_set, l as stringify, j as create_remote_key, h as handle_error_and_jsonify } from "./chunks/shared.js";
 import { ValidationError, HttpError, SvelteKitError } from "@sveltejs/kit/internal";
-import { B as BROWSER } from "./chunks/false.js";
-import { b as base, c as app_dir, p as prerendering } from "./chunks/environment.js";
+import { D as DEV } from "./chunks/true.js";
+import { b as base, c as app_dir, i as prerendering } from "./chunks/environment.js";
 function create_validator(validate_or_fn, maybe_fn) {
   if (!maybe_fn) {
     return (arg) => {
@@ -40,13 +39,6 @@ async function get_response(info, arg, state, get_result) {
   await 0;
   const cache = get_cache(info, state);
   return cache[stringify_remote_arg(arg, state.transport)] ??= get_result();
-}
-function parse_remote_response(data, transport) {
-  const revivers = {};
-  for (const key in transport) {
-    revivers[key] = transport[key].decode;
-  }
-  return parse(data, revivers);
 }
 async function run_remote_function(event, state, allow_cookies, get_input, fn) {
   const store = {
@@ -144,6 +136,28 @@ function form(validate_or_fn, maybe_fn) {
       name: "",
       id: "",
       fn: async (data, meta, form_data) => {
+        if (!data) {
+          const error2 = () => {
+            throw new Error(
+              "Remote form functions no longer get passed a FormData object. `form` now has the same signature as `query` or `command`, i.e. it expects to be invoked like `form(schema, callback)` or `form('unchecked', callback)`. The payload of the callback function is now a POJO instead of a FormData object. See https://kit.svelte.dev/docs/remote-functions#form for details."
+            );
+          };
+          data = {};
+          for (const key2 of [
+            "append",
+            "delete",
+            "entries",
+            "forEach",
+            "get",
+            "getAll",
+            "has",
+            "keys",
+            "set",
+            "values"
+          ]) {
+            Object.defineProperty(data, key2, { get: error2 });
+          }
+        }
         const output = {};
         output.submission = true;
         const { event, state } = get_request_store();
@@ -209,6 +223,16 @@ function form(validate_or_fn, maybe_fn) {
         );
       }
     });
+    {
+      throw_on_old_property_access(instance);
+      Object.defineProperty(instance, "buttonProps", {
+        get() {
+          throw new Error(
+            '`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`. See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
+          );
+        }
+      });
+    }
     Object.defineProperty(instance, "result", {
       get() {
         try {
@@ -336,28 +360,7 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
       const payload = stringify_remote_arg(arg, state.transport);
       const id = __.id;
       const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ""}`;
-      if (!state.prerendering && !BROWSER && !event.isRemoteRequest) {
-        try {
-          return await get_response(__, arg, state, async () => {
-            const key = stringify_remote_arg(arg, state.transport);
-            const cache = get_cache(__, state);
-            const promise3 = cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
-              async (response) => {
-                if (!response.ok) {
-                  throw new Error("Prerendered response not found");
-                }
-                const prerendered = await response.json();
-                if (prerendered.type === "error") {
-                  error(prerendered.status, prerendered.error);
-                }
-                return prerendered.result;
-              }
-            );
-            return parse_remote_response(await promise3, state.transport);
-          });
-        } catch {
-        }
-      }
+      if (!state.prerendering && !DEV) ;
       if (state.prerendering?.remote_responses.has(url)) {
         return (
           /** @type {Promise<any>} */

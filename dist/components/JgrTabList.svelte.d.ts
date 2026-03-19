@@ -32,6 +32,8 @@ export type TabDef = {
     };
     /** Toute la liste passe en stale (opacité réduite, interactions bloquées) */
     pending?: boolean;
+    /** Label affiché sur le JgrCta pending. Défaut : "En cours" */
+    pendingLabel?: string;
     loading?: boolean;
     empty?: string;
 };
