@@ -153,3 +153,10 @@ export function jgrConsole(
   oninput?: (text: string) => void,
 ): void {}
 
+/** Visualiseur SVG DAG : nœuds, arêtes, niveaux, mise en évidence réactive. */
+export function jgrDag(
+  roadmap: RoadmapData,
+  activeIds?: number[],
+  onNodeClick?: (id: number) => void,
+): void {}
+

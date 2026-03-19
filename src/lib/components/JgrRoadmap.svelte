@@ -1,6 +1,7 @@
 <script lang="ts">
   import JgrLayout from './JgrLayout.svelte';
   import JgrTabList from './JgrTabList.svelte';
+  import JgrDag from './JgrDag.svelte';
   import type { TabDef, ListItem } from './JgrTabList.svelte';
 
   export type RoadmapStep = {
@@ -36,14 +37,12 @@
   };
 
   let {
-    src,
     roadmap,
     status = 'ok',
     generatedAt,
     onRegenerate,
     onissuefilter,
   }: {
-    src: string;
     roadmap?: RoadmapData;
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;
@@ -53,6 +52,7 @@
 
   let activeTab = $state('tasks');
   let selectedItemId: string | null = $state(null);
+  let activeIds: number[] = $state([]);
 
   function dominantSkill(steps: RoadmapStep[]): string {
     const counts: Record<string, number> = {};
@@ -101,7 +101,7 @@
       });
   }
 
-  // Map itemId → stepIds pour postMessage vers l'iframe
+  // Map itemId → stepIds pour la mise en évidence dans JgrDag
   const itemSteps = $derived.by(() => {
     const allSteps = roadmap?.steps ?? [];
     const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
@@ -130,19 +130,14 @@
     return map;
   });
 
-  function sendCmd(msg: { type: string; ids?: number[] }) {
-    try { localStorage.setItem('roadmap-cmd', JSON.stringify({ ...msg, ts: Date.now() })); } catch { /* ignore */ }
-  }
-
   function handleSelect(_tabId: string, item: ListItem) {
     if (selectedItemId === item.id) {
       selectedItemId = null;
-      sendCmd({ type: 'deactivate' });
+      activeIds = [];
       onissuefilter?.([]);
     } else {
       selectedItemId = item.id;
-      const ids = itemSteps.get(item.id) ?? [];
-      sendCmd({ type: 'activate', ids });
+      activeIds = itemSteps.get(item.id) ?? [];
       onissuefilter?.(item.issues ?? []);
     }
   }
@@ -191,7 +186,7 @@
   $effect(() => {
     activeTab; // dépendance réactive
     selectedItemId = null;
-    sendCmd({ type: 'deactivate' });
+    activeIds = [];
   });
 </script>
 
@@ -226,7 +221,7 @@
     {/snippet}
 
     {#snippet center()}
-      <div class="iframe-wrap">
+      <div class="dag-wrap">
         {#if status === 'loading'}
           <div class="placeholder">Chargement···</div>
         {:else if status === 'generating'}
@@ -237,12 +232,8 @@
           <div class="placeholder err">
             Erreur · <button onclick={onRegenerate}>Réessayer</button>
           </div>
-        {:else}
-          <iframe
-            {src}
-            title="Roadmap DAG"
-            class="dag-frame"
-          ></iframe>
+        {:else if roadmap}
+          <JgrDag {roadmap} {activeIds} />
         {/if}
       </div>
     {/snippet}
@@ -310,20 +301,12 @@
   flex-shrink: 0;
 }
 
-.iframe-wrap {
+.dag-wrap {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
-}
-.dag-frame {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-  background: #12121a;
 }
 .placeholder {
   flex: 1;

@@ -1,7 +1,4 @@
 {
 	"/": [],
-	"/api/roadmap-viz": [
-		"src/routes/api/roadmap-viz/+server.ts"
-	],
 	"/demo": []
 }

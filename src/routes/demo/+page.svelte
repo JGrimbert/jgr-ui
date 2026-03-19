@@ -296,7 +296,6 @@
     <h2 class="section-title">JgrRoadmap + JgrTabList</h2>
     <div style="height: 420px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden;">
       <JgrRoadmap
-        src="/api/roadmap-viz"
         roadmap={mockRoadmap}
         status={demoRoadmapStatus}
         generatedAt={demoGeneratedAt}
