@@ -42,12 +42,14 @@
     generatedAt,
     onRegenerate,
     onissuefilter,
+    ontabchange,
   }: {
     roadmap?: RoadmapData;
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;
     onRegenerate?: () => void;
     onissuefilter?: (issues: number[]) => void;
+    ontabchange?: (issues: number[]) => void;
   } = $props();
 
   let activeTab = $state('tasks');
@@ -182,11 +184,14 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
-  // Quand l'onglet change : réinitialiser la sélection dans le graphe
+  // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif
   $effect(() => {
-    activeTab; // dépendance réactive
+    void activeTab; // dépendance réactive
     selectedItemId = null;
     activeIds = [];
+    const currentTab = tabs.find(t => t.id === activeTab);
+    const tabIssues = [...new Set((currentTab?.items ?? []).flatMap((item: any) => item.issues ?? []))];
+    ontabchange?.(tabIssues);
   });
 </script>
 
