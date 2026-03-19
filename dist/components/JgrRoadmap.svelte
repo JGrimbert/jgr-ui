@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import JgrLayout from './JgrLayout.svelte';
   import JgrTabList from './JgrTabList.svelte';
   import JgrDag from './JgrDag.svelte';
@@ -184,12 +185,14 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
-  // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif
+  // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.
+  // On utilise untrack pour lire `tabs` sans créer de dépendance réactive dessus :
+  // sinon, quand ontabchange modifie le filtre → roadmap prop change → tabs change → effet re-boucle.
   $effect(() => {
-    void activeTab; // dépendance réactive
+    void activeTab; // seule dépendance voulue
     selectedItemId = null;
     activeIds = [];
-    const currentTab = tabs.find(t => t.id === activeTab);
+    const currentTab = untrack(() => tabs).find(t => t.id === activeTab);
     const tabIssues = [...new Set((currentTab?.items ?? []).flatMap((item: any) => item.issues ?? []))];
     ontabchange?.(tabIssues);
   });
