@@ -55,16 +55,7 @@
 
   let systemLogs = $derived(logs.filter(l => l.type === 'system' && !/^\[pid:\d+\]$/.test(l.line)));
 
-  let statusLine = $state('');
-  let statusDebounce: ReturnType<typeof setTimeout> | null = null;
-  $effect(() => {
-    if (systemLogs.length > 0) {
-      if (statusDebounce) clearTimeout(statusDebounce);
-      statusDebounce = setTimeout(() => { statusLine = systemLogs[systemLogs.length - 1].line; }, 150);
-    } else {
-      statusLine = '';
-    }
-  });
+  let statusLine = $derived(systemLogs.length > 0 ? systemLogs[systemLogs.length - 1].line : '');
 
   let inputValue = $state('');
 
@@ -110,11 +101,7 @@
   <div class="log-area" bind:this={logArea} onscroll={onScroll}>
     {#if visibleLogs.length === 0}
       {#if running}
-        {#if statusLine}
-          <span class="hint status">{FRAMES[frame]} {statusLine}</span>
-        {:else}
-          <span class="hint blink">{FRAMES[frame]} En attente de la première sortie…</span>
-        {/if}
+        <span class="hint blink">{FRAMES[frame]} En attente de la première sortie…</span>
       {:else}
         <span class="hint">Aucune sortie</span>
       {/if}
@@ -124,6 +111,10 @@
       {/each}
     {/if}
   </div>
+
+  {#if running && statusLine}
+    <div class="status-footer">{FRAMES[frame]} {statusLine}</div>
+  {/if}
 
   {#if !running && !sessionAlive && completionLabel}
     <div class="completion-hint">{completionLabel}</div>
@@ -267,7 +258,19 @@
 }
 .blink { animation: blink 1.2s step-start infinite; }
 @keyframes blink { 50% { opacity: 0.3; } }
-.hint.status { color: #4a9eff; font-style: italic; font-size: 0.7rem; opacity: 0.75; }
+.status-footer {
+  padding: 0.25rem 1.2rem;
+  font-size: 0.65rem;
+  color: #4a9eff;
+  font-style: italic;
+  opacity: 0.75;
+  border-top: 1px solid #1a1a2a;
+  background: var(--bg-deep);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .completion-hint {
   padding: 0.35rem 1.2rem;
   font-size: 0.65rem;

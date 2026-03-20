@@ -185,6 +185,45 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
+  // Roadmap filtrée pour le DAG, calculée depuis la roadmap COMPLÈTE
+  const dagRoadmap = $derived.by((): RoadmapData | undefined => {
+    if (!roadmap) return undefined;
+
+    // Sélection manuelle d'un item : filtrer sur ses steps
+    if (selectedItemId !== null) {
+      const stepIds = new Set(itemSteps.get(selectedItemId) ?? []);
+      const filtered = roadmap.steps.filter(s => stepIds.has(s.id));
+      const keptIds = new Set(filtered.map(s => s.id));
+      return {
+        ...roadmap,
+        steps: filtered.map(s => ({
+          ...s,
+          dependsOnSteps: s.dependsOnSteps.filter(id => keptIds.has(id)),
+        })),
+        stats: { ...roadmap.stats, steps: filtered.length },
+      };
+    }
+
+    // Seulement l'onglet "tasks" filtre le DAG aux steps liés à des issues
+    if (activeTab !== 'tasks') return roadmap;
+
+    const currentTab = tabs.find(t => t.id === activeTab);
+    const tabIssues = [...new Set((currentTab?.items ?? []).flatMap(item => item.issues ?? []))];
+    if (tabIssues.length === 0) return roadmap;
+
+    const set = new Set(tabIssues);
+    const filtered = roadmap.steps.filter(s => s.issues?.some(n => set.has(n)));
+    const keptIds = new Set(filtered.map(s => s.id));
+    return {
+      ...roadmap,
+      steps: filtered.map(s => ({
+        ...s,
+        dependsOnSteps: s.dependsOnSteps.filter(id => keptIds.has(id)),
+      })),
+      stats: { ...roadmap.stats, steps: filtered.length },
+    };
+  });
+
   // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.
   // On utilise untrack pour lire `tabs` sans créer de dépendance réactive dessus :
   // sinon, quand ontabchange modifie le filtre → roadmap prop change → tabs change → effet re-boucle.
@@ -240,8 +279,8 @@
           <div class="placeholder err">
             Erreur · <button onclick={onRegenerate}>Réessayer</button>
           </div>
-        {:else if roadmap}
-          <JgrDag {roadmap} {activeIds} />
+        {:else if dagRoadmap}
+          <JgrDag roadmap={dagRoadmap} {activeIds} />
         {/if}
       </div>
     {/snippet}
