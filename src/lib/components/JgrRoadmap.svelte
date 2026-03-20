@@ -268,7 +268,7 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
-  // Roadmap pour le DAG : chaque onglet produit une vue différente.
+  // Roadmap pour le DAG gauche : chaque onglet produit une vue différente.
   const dagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
 
@@ -301,6 +301,23 @@
     }
 
     return undefined;
+  });
+
+  // Roadmap pour le DAG droit : toujours la vue clusters (référence fixe).
+  const clusterDagRoadmap = $derived.by((): RoadmapData | undefined => {
+    if (!roadmap) return undefined;
+    const allSteps = roadmap.steps;
+    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
+    const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
+    return buildClusterRoadmap(issueSteps, clusters ?? []);
+  });
+
+  // activeIds pour le DAG clusters : index du cluster sélectionné (uniquement si onglet clusters actif).
+  const clusterActiveIds = $derived.by(() => {
+    if (!selectedItemId?.startsWith('cluster-')) return [];
+    const keyword = selectedItemId.replace('cluster-', '');
+    const ci = (clusters ?? []).findIndex(c => c.keyword === keyword);
+    return ci >= 0 ? [ci] : [];
   });
 
   // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.
@@ -358,8 +375,21 @@
           <div class="placeholder err">
             Erreur · <button onclick={onRegenerate}>Réessayer</button>
           </div>
-        {:else if dagRoadmap}
-          <JgrDag roadmap={dagRoadmap} {activeIds} />
+        {:else}
+          <div class="dag-panels">
+            <div class="dag-panel">
+              <span class="dag-panel-label">{activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps'}</span>
+              {#if dagRoadmap}
+                <JgrDag roadmap={dagRoadmap} {activeIds} />
+              {/if}
+            </div>
+            <div class="dag-panel">
+              <span class="dag-panel-label">Clusters</span>
+              {#if clusterDagRoadmap}
+                <JgrDag roadmap={clusterDagRoadmap} activeIds={clusterActiveIds} />
+              {/if}
+            </div>
+          </div>
         {/if}
       </div>
     {/snippet}
@@ -434,6 +464,33 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+}
+.dag-panels {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  gap: 1px;
+  background: var(--border, #1e1e2e);
+}
+.dag-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.dag-panel-label {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  z-index: 2;
+  font-size: 0.52rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim, #333);
+  pointer-events: none;
 }
 .placeholder {
   flex: 1;

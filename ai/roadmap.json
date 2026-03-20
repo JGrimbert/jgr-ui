@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-19T14:41:35.922Z",
+  "generated": "2026-03-20T12:16:02.564Z",
   "stats": {
     "nodes": 10,
     "edges": 0,
@@ -30,7 +30,15 @@
       ],
       "isSpine": true,
       "concept": "atlas-manifest",
-      "pattern": null
+      "pattern": null,
+      "issues": [
+        15,
+        20,
+        26,
+        57,
+        60
+      ],
+      "coalNodeId": "coal-2"
     },
     {
       "id": 2,
@@ -52,7 +60,11 @@
       ],
       "isSpine": false,
       "concept": "atlas-manifest",
-      "pattern": null
+      "pattern": null,
+      "issues": [
+        20
+      ],
+      "coalNodeId": "coal-4"
     },
     {
       "id": 3,
@@ -73,7 +85,13 @@
       ],
       "isSpine": false,
       "concept": "atlas-composites",
-      "pattern": null
+      "pattern": null,
+      "issues": [
+        1,
+        26,
+        60
+      ],
+      "coalNodeId": "coal-5"
     }
   ],
   "spine": [
@@ -119,7 +137,75 @@
     "adapters": []
   },
   "pipelines": [],
-  "coalNodes": [],
+  "coalNodes": [
+    {
+      "symbols": [
+        "jgrLayout"
+      ],
+      "issues": [
+        15,
+        26,
+        57,
+        60
+      ],
+      "score": 4,
+      "count": 4
+    },
+    {
+      "symbols": [
+        "jgrTabList"
+      ],
+      "issues": [
+        26,
+        60
+      ],
+      "score": 2,
+      "count": 2
+    },
+    {
+      "symbols": [
+        "jgrConsole"
+      ],
+      "issues": [
+        15,
+        20,
+        57
+      ],
+      "score": 3,
+      "count": 3
+    },
+    {
+      "symbols": [
+        "jgrItem"
+      ],
+      "issues": [
+        15,
+        26
+      ],
+      "score": 2,
+      "count": 2
+    },
+    {
+      "symbols": [
+        "jgrPrompt"
+      ],
+      "issues": [
+        20
+      ],
+      "score": 1,
+      "count": 1
+    },
+    {
+      "symbols": [
+        "jgrRoadmap"
+      ],
+      "issues": [
+        1
+      ],
+      "score": 1,
+      "count": 1
+    }
+  ],
   "project": "jgr-ui",
   "root": "C:/jgr-ui"
 }
