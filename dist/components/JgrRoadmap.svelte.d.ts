@@ -35,6 +35,7 @@ type $$ComponentProps = {
     onRegenerate?: () => void;
     onissuefilter?: (issues: number[]) => void;
     ontabchange?: (issues: number[]) => void;
+    onissueclick?: (n: number) => void;
 };
 declare const JgrRoadmap: import("svelte").Component<$$ComponentProps, {}, "">;
 type JgrRoadmap = ReturnType<typeof JgrRoadmap>;

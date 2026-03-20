@@ -42,10 +42,10 @@
 
   // ── JgrTabList — données partagées ──────────────────────────────────────────
   const todoItems: ListItem[] = [
-    { id: 'src/auth.ts:42',     label: 'Vérifier l\'expiration du token JWT',  prefix: 'auth.ts:42',     actionLabel: '→ Task' },
-    { id: 'src/api/users.ts:8', label: 'Paginer les résultats de listUsers',   prefix: 'users.ts:8',     actionLabel: '→ Task' },
-    { id: 'src/db/index.ts:17', label: 'Ajouter retry sur connexion échouée',  prefix: 'db/index.ts:17', actionLabel: '→ Task' },
-    { id: 'src/cache.ts:55',    label: 'Invalider le cache après mutation',     prefix: 'cache.ts:55',    actionLabel: '→ Task', dimmed: true },
+    { id: 'src/auth.ts:42',     label: 'Vérifier l\'expiration du token JWT',  prefix: 'auth.ts:42',     actionLabel: '→' },
+    { id: 'src/api/users.ts:8', label: 'Paginer les résultats de listUsers',   prefix: 'users.ts:8',     actionLabel: '→' },
+    { id: 'src/db/index.ts:17', label: 'Ajouter retry sur connexion échouée',  prefix: 'db/index.ts:17', actionLabel: '→' },
+    { id: 'src/cache.ts:55',    label: 'Invalider le cache après mutation',     prefix: 'cache.ts:55',    actionLabel: '→', dimmed: true },
   ];
 
   const issueItems: ListItem[] = [
@@ -65,20 +65,11 @@
   let demo0Tab = $state('todos');
 
   const demo0Tabs: TabDef[] = [
-    { id: 'todos',  label: 'TODO',   items: todoItems,  pending: true,  pendingLabel: 'Création task…', empty: 'Aucun TODO'           },
+    { id: 'todos',  label: 'TODO',   items: todoItems,  pending: true,  pendingLabel: 'Création task…', empty: 'Aucun TODO', selectedId: 'src/auth.ts:42' },
     { id: 'issues', label: 'Issues', items: issueItems, pending: false,                                  empty: 'Aucune issue ouverte' },
   ];
 
-  // ── Démo 1 : liste simple ────────────────────────────────────────────────────
-  let demo1Tab = $state('todos');
-
-  const demo1Tabs: TabDef[] = [
-    { id: 'todos',  label: 'TODO',   items: todoItems,  empty: 'Aucun TODO'           },
-    { id: 'issues', label: 'Issues', items: issueItems, empty: 'Aucune issue ouverte' },
-    { id: 'tasks',  label: 'Tasks',  items: taskItems,  empty: 'Aucune task'          },
-  ];
-
-  // ── Démo 2 : CTA header + pending ────────────────────────────────────────────
+  // ── Démo 2 : CTA header + pending (stale) ───────────────────────────────────
   let demo2Tab = $state('todos');
   let demo2TodoPending = $state(false);
   let demo2IssuePending = $state(false);
@@ -342,36 +333,22 @@
   <div class="divider"></div>
   <h2 class="section-title" style="font-size: 0.8rem; color: var(--text-secondary);">JgrTabList</h2>
 
-  <!-- ── Démos 1 + 2 ── -->
-  <div class="demo-grid">
-    <section>
-      <h3 class="demo-title">1 — Liste simple, 3 onglets</h3>
-      <p class="demo-desc">Onglets TODO / Issues / Tasks avec items basiques. Recherche filtrante intégrée.</p>
-      <div class="demo-box">
-        <JgrTabList
-          tabs={demo1Tabs}
-          activeTab={demo1Tab}
-          ontabchange={id => demo1Tab = id}
-        />
-      </div>
-    </section>
-
-    <section>
-      <h3 class="demo-title">2 — CTA header + état pending (stale)</h3>
-      <p class="demo-desc">
-        Chaque onglet peut avoir un CTA dans la barre de tabs.<br/>
-        L'action sur un item met toute la liste en stale jusqu'à la réponse.
-        Cliquer <strong>→ Task</strong> ou <strong>Fermer</strong> pour tester.
-      </p>
-      <div class="demo-box">
-        <JgrTabList
-          tabs={demo2Tabs}
-          activeTab={demo2Tab}
-          ontabchange={id => demo2Tab = id}
-        />
-      </div>
-    </section>
-  </div>
+  <!-- ── Démo 2 ── -->
+  <section>
+    <h3 class="demo-title">2 — CTA header + état pending (stale)</h3>
+    <p class="demo-desc">
+      Chaque onglet peut avoir un CTA dans la barre de tabs.<br/>
+      L'action sur un item met toute la liste en stale jusqu'à la réponse.
+      Cliquer <strong>→ Task</strong> ou <strong>Fermer</strong> pour tester.
+    </p>
+    <div class="demo-box">
+      <JgrTabList
+        tabs={demo2Tabs}
+        activeTab={demo2Tab}
+        ontabchange={id => demo2Tab = id}
+      />
+    </div>
+  </section>
 
   <!-- ── Démos 3 + 4 ── -->
   <div class="demo-grid">
@@ -444,41 +421,6 @@
     </section>
   </div>
 
-  <!-- ── Démo 5 : chargement + vide ── -->
-  <section>
-    <h3 class="demo-title">5 — États loading / vide / dimmed</h3>
-    <p class="demo-desc">Items <code>dimmed</code>, onglet en chargement, liste vide avec message personnalisé.</p>
-    <div class="demo-row">
-      <div class="demo-box-sm">
-        <p class="demo-sublabel">loading</p>
-        <div class="demo-inner">
-          <JgrTabList tabs={[{ id: 'a', label: 'Issues', items: [], loading: true }]} />
-        </div>
-      </div>
-      <div class="demo-box-sm">
-        <p class="demo-sublabel">empty (message custom)</p>
-        <div class="demo-inner">
-          <JgrTabList tabs={[{ id: 'a', label: 'Tasks', items: [], empty: 'Toutes les tasks sont mergées ✓' }]} />
-        </div>
-      </div>
-      <div class="demo-box-sm">
-        <p class="demo-sublabel">items dimmed</p>
-        <div class="demo-inner">
-          <JgrTabList
-            tabs={[{
-              id: 'a',
-              label: 'Tasks',
-              items: [
-                { id: '1', label: 'OAuth Google',     prefix: '#12', labels: [{ name: 'Mergée', color: '4caf50' }], dimmed: true  },
-                { id: '2', label: 'Bug 500 prod',     prefix: '#14', labels: [{ name: 'impl.', color: '9181f9' }],  dimmed: false },
-                { id: '3', label: 'Mise à jour deps', prefix: '#15', labels: [{ name: 'Mergée', color: '4caf50' }], dimmed: true  },
-              ],
-            }]}
-          />
-        </div>
-      </div>
-    </div>
-  </section>
 </div>
 
 <style>

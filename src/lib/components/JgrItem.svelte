@@ -10,6 +10,7 @@
     actionLoading = false,
     onaction,
     onselect,
+    onissueclick,
   }: {
     title?: string;
     prefix?: string | number;
@@ -21,6 +22,7 @@
     actionLoading?: boolean;
     onaction?: () => void;
     onselect?: () => void;
+    onissueclick?: (n: number) => void;
   } = $props();
 </script>
 
@@ -56,7 +58,14 @@
         >{label.name}</span>
       {/each}
       {#each issues as n}
-        <span class="label issue">#{n}</span>
+        <span
+          class="label issue"
+          class:clickable={!!onissueclick}
+          role={onissueclick ? 'button' : undefined}
+          tabindex={onissueclick ? 0 : undefined}
+          onclick={onissueclick ? (e) => { e.stopPropagation(); onissueclick(n); } : undefined}
+          onkeydown={onissueclick ? (e) => e.key === 'Enter' && (e.stopPropagation(), onissueclick(n)) : undefined}
+        >#{n}</span>
       {/each}
     </div>
   {/if}
@@ -100,18 +109,22 @@
   margin-left: auto;
   flex-shrink: 0;
   background: none;
-  border: 1px solid #333;
+  border: none;
+  outline: none;
   color: #555;
-  font-size: 0.58rem;
-  padding: 0.05rem 0.35rem;
-  border-radius: 3px;
+  font-size: 1.2rem;
+  padding: 0 0.15rem;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
-  transition: color 0.15s, border-color 0.15s;
+  line-height: 1;
+  opacity: 0;
+  transition: color 0.15s, opacity 0.1s;
 }
-.item-action:hover:not(:disabled) { color: var(--accent-hover); border-color: var(--accent-hover); }
-.item-action:disabled { opacity: 0.5; cursor: default; }
-.item-action.done { color: #3a8a3a; border-color: #1a4a1a; cursor: default; }
+.item-row:hover .item-action,
+.item-row.active .item-action { opacity: 1; }
+.item-action.done { opacity: 1 !important; color: #3a8a3a; cursor: default; }
+.item-action:hover:not(:disabled) { color: var(--accent-hover); }
+.item-action:disabled:not(.done) { opacity: 0.4; cursor: default; }
 .item-labels {
   display: flex;
   flex-wrap: wrap;
@@ -130,5 +143,13 @@
   color: #6a6a8a;
   border-color: #2a2a4a;
   font-family: 'JetBrains Mono', monospace;
+}
+.label.issue.clickable {
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+}
+.label.issue.clickable:hover {
+  color: #9181f9;
+  border-color: #4a3a7a;
 }
 </style>
