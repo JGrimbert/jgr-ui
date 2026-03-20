@@ -14,6 +14,7 @@
     actionLoading?: boolean;
     actionDone?: boolean;
     onaction?: () => void;
+    actionHoverOnly?: boolean;
     onclose?: { handler: () => void; loading?: boolean; done?: boolean };
   };
 
@@ -38,6 +39,7 @@
     activeTab,
     ontabchange,
     onselect,
+    onissueclick,
     detail,
     customcontent,
   }: {
@@ -45,6 +47,7 @@
     activeTab?: string;
     ontabchange?: (id: string) => void;
     onselect?: (tabId: string, item: ListItem) => void;
+    onissueclick?: (n: number) => void;
     /** Snippet rendu inline sous l'item sélectionné : (tabId, itemId) */
     detail?: Snippet<[string, string]>;
     /** Snippet rendu pour un onglet sans items : (tabId) */
@@ -128,18 +131,19 @@
         <p class="tl-hint">{current.empty ?? (q ? 'Aucun résultat' : 'Vide')}</p>
       {:else}
         {#each rows as item}
-          <div class="tl-row" class:dimmed={item.dimmed}>
+          <div class="tl-row" class:dimmed={item.dimmed} class:tl-row--with-close={!!item.onclose} class:tl-row--selected={current.selectedId === item.id}>
             <JgrItem
               prefix={item.prefix}
               title={item.label}
               labels={item.labels}
               issues={item.issues}
               state={current.selectedId === item.id ? 'selected' : 'default'}
-              actionLabel={item.actionLabel}
+              actionLabel={item.actionHoverOnly ? undefined : item.actionLabel}
               actionLoading={item.actionLoading}
               actionDone={item.actionDone}
-              onaction={item.onaction}
+              onaction={item.actionHoverOnly ? undefined : item.onaction}
               onselect={() => onselect?.(currentId, item)}
+              onissueclick={onissueclick}
             />
             {#if item.onclose}
               <button
@@ -150,6 +154,15 @@
                 disabled={item.onclose.loading || item.onclose.done}
                 title="Fermer"
               >{item.onclose.done ? '✓' : item.onclose.loading ? '…' : '✕'}</button>
+            {/if}
+            {#if item.onaction && item.actionHoverOnly}
+              <button
+                class="tl-act"
+                class:tl-act-done={item.actionDone}
+                onclick={(e) => { e.stopPropagation(); item.onaction!(); }}
+                disabled={item.actionLoading || item.actionDone}
+                title={item.actionLabel ?? "→"}
+              >{item.actionDone ? '✓' : item.actionLoading ? '…' : '→'}</button>
             {/if}
           </div>
           {#if current.selectedId === item.id && detail}
@@ -319,4 +332,27 @@
   display: flex;
   flex-direction: column;
 }
+.tl-act {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  outline: none;
+  color: #666;
+  font-size: 1.3rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s, color 0.1s;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0 0.15rem;
+  line-height: 1;
+}
+.tl-row:hover .tl-act,
+.tl-row--selected .tl-act { opacity: 1; }
+.tl-row--with-close .tl-act { right: 1.8rem; }
+.tl-act:hover:not(:disabled) { color: var(--accent-hover, #9181f9); }
+.tl-act-done { color: #3a8a3a; cursor: default; }
+.tl-act:disabled:not(.tl-act-done) { opacity: 0.5; cursor: default; }
 </style>

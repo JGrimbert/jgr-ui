@@ -44,6 +44,7 @@
     onRegenerate,
     onissuefilter,
     ontabchange,
+    onissueclick,
   }: {
     roadmap?: RoadmapData;
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
@@ -51,6 +52,7 @@
     onRegenerate?: () => void;
     onissuefilter?: (issues: number[]) => void;
     ontabchange?: (issues: number[]) => void;
+    onissueclick?: (n: number) => void;
   } = $props();
 
   let activeTab = $state('tasks');
@@ -73,6 +75,93 @@
       if (parts.length > 0) return parts[parts.length - 1];
     }
     return step.label.split(': ')[1] || step.label || 'misc';
+  }
+
+  // Construit un RoadmapData avec 1 nœud par couple (step, issue) pour l'onglet Tasks.
+  function buildTaskRoadmap(steps: RoadmapStep[]): RoadmapData {
+    // Pairs triés par step.id puis issue number
+    const pairs = steps
+      .flatMap(s => (s.issues ?? []).map(n => ({ step: s, issue: n })))
+      .sort((a, b) => a.step.id !== b.step.id ? a.step.id - b.step.id : a.issue - b.issue);
+
+    // stepId → liste d'indices de tâche
+    const stepToTaskIds = new Map<number, number[]>();
+    pairs.forEach(({ step }, i) => {
+      if (!stepToTaskIds.has(step.id)) stepToTaskIds.set(step.id, []);
+      stepToTaskIds.get(step.id)!.push(i);
+    });
+
+    const taskSteps: RoadmapStep[] = pairs.map(({ step, issue }, i) => {
+      const depTaskIds = new Set<number>();
+      for (const depStepId of step.dependsOnSteps)
+        for (const tid of (stepToTaskIds.get(depStepId) ?? []))
+          depTaskIds.add(tid);
+      return {
+        id: i,
+        label: `#${issue}: ${step.concept ?? step.label}`,
+        skill: step.skill,
+        concept: `#${issue}`,
+        nodes: step.nodes,
+        files: step.files,
+        rationale: step.rationale,
+        dependsOnSteps: [...depTaskIds],
+        issues: [issue],
+        isSpine: step.isSpine,
+      };
+    });
+
+    return {
+      steps: taskSteps,
+      spine: [],
+      stats: { nodes: taskSteps.length, edges: taskSteps.reduce((n, s) => n + s.dependsOnSteps.length, 0), levels: 0, steps: taskSteps.length },
+    };
+  }
+
+  // Construit un RoadmapData synthétique à partir de groupes (pour Étapes/Dossiers/Domaines).
+  // Chaque groupe devient un nœud ; les arêtes sont dérivées des dépendances entre steps.
+  function buildGroupRoadmap(steps: RoadmapStep[], depth: 0 | 1 | 2): RoadmapData {
+    const groups = new Map<string, RoadmapStep[]>();
+    for (const step of steps) {
+      const k = depth === 0
+        ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
+        : depth === 1 ? stepKey(step, 1)
+        : (step.skill || 'internal');
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k)!.push(step);
+    }
+    const sorted = [...groups.entries()]
+      .sort((a, b) => Math.min(...a[1].map(s => s.id)) - Math.min(...b[1].map(s => s.id)));
+
+    // stepId → index de groupe
+    const stepToGroup = new Map<number, number>();
+    sorted.forEach(([, ss], idx) => ss.forEach(s => stepToGroup.set(s.id, idx)));
+
+    const syntheticSteps: RoadmapStep[] = sorted.map(([key, ss], idx) => {
+      const depGroups = new Set<number>();
+      for (const step of ss)
+        for (const dep of step.dependsOnSteps) {
+          const g = stepToGroup.get(dep);
+          if (g !== undefined && g !== idx) depGroups.add(g);
+        }
+      return {
+        id: idx,
+        label: key,
+        skill: dominantSkill(ss),
+        concept: key,
+        nodes: ss.flatMap(s => s.nodes),
+        files: ss.flatMap(s => s.files),
+        rationale: '',
+        dependsOnSteps: [...depGroups],
+        issues: [...new Set(ss.flatMap(s => s.issues ?? []))],
+      };
+    });
+
+    const edgeCount = syntheticSteps.reduce((n, s) => n + s.dependsOnSteps.length, 0);
+    return {
+      steps: syntheticSteps,
+      spine: [],
+      stats: { nodes: steps.length, edges: edgeCount, levels: 0, steps: syntheticSteps.length },
+    };
   }
 
   // depth 0 = étapes (concept/fichier), 1 = dossiers, 2 = domaines (skill)
@@ -145,6 +234,20 @@
     }
   }
 
+  function handleIssueClick(n: number) {
+    // Switcher sur l'onglet Tasks et sélectionner la task liée à cette issue
+    const taskItem = tabs.find(t => t.id === 'tasks')?.items?.find(i => i.issues?.includes(n));
+    activeTab = 'tasks';
+    if (taskItem) {
+      selectedItemId = taskItem.id;
+      activeIds = itemSteps.get(taskItem.id) ?? [];
+    } else {
+      selectedItemId = null;
+      activeIds = [];
+    }
+    onissueclick?.(n);
+  }
+
   const tabs: TabDef[] = $derived.by(() => {
     const allSteps = roadmap?.steps ?? [];
     // Même filtre que le visualizer : si des steps ont des issues, on n'affiche que ceux-là
@@ -185,43 +288,36 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
-  // Roadmap filtrée pour le DAG, calculée depuis la roadmap COMPLÈTE
+  // Roadmap pour le DAG : chaque onglet produit une vue différente.
   const dagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
 
-    // Sélection manuelle d'un item : filtrer sur ses steps
-    if (selectedItemId !== null) {
-      const stepIds = new Set(itemSteps.get(selectedItemId) ?? []);
-      const filtered = roadmap.steps.filter(s => stepIds.has(s.id));
-      const keptIds = new Set(filtered.map(s => s.id));
+    const allSteps = roadmap.steps;
+    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
+    const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
+
+    // Vue par onglet
+    if (activeTab === 'tasks') {
+      // 1 nœud par couple (step, issue) → 188 nœuds
+      return buildTaskRoadmap(issueSteps);
+    }
+
+    if (activeTab === 'steps') {
+      // 1 nœud par step → 44 nœuds
+      const keptIds = new Set(issueSteps.map(s => s.id));
       return {
         ...roadmap,
-        steps: filtered.map(s => ({
+        steps: issueSteps.map(s => ({
           ...s,
           dependsOnSteps: s.dependsOnSteps.filter(id => keptIds.has(id)),
         })),
-        stats: { ...roadmap.stats, steps: filtered.length },
+        stats: { ...roadmap.stats, steps: issueSteps.length },
       };
     }
 
-    // Seulement l'onglet "tasks" filtre le DAG aux steps liés à des issues
-    if (activeTab !== 'tasks') return roadmap;
-
-    const currentTab = tabs.find(t => t.id === activeTab);
-    const tabIssues = [...new Set((currentTab?.items ?? []).flatMap(item => item.issues ?? []))];
-    if (tabIssues.length === 0) return roadmap;
-
-    const set = new Set(tabIssues);
-    const filtered = roadmap.steps.filter(s => s.issues?.some(n => set.has(n)));
-    const keptIds = new Set(filtered.map(s => s.id));
-    return {
-      ...roadmap,
-      steps: filtered.map(s => ({
-        ...s,
-        dependsOnSteps: s.dependsOnSteps.filter(id => keptIds.has(id)),
-      })),
-      stats: { ...roadmap.stats, steps: filtered.length },
-    };
+    // Nœuds synthétiques groupés (étapes / dossiers / domaines)
+    const depth = activeTab === 'etapes' ? 0 : activeTab === 'dossiers' ? 1 : 2;
+    return buildGroupRoadmap(issueSteps, depth);
   });
 
   // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.
@@ -291,6 +387,7 @@
         {activeTab}
         ontabchange={id => activeTab = id}
         onselect={handleSelect}
+        onissueclick={handleIssueClick}
       />
     {/snippet}
   </JgrLayout>

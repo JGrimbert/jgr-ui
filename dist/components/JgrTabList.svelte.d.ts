@@ -13,6 +13,7 @@ export type ListItem = {
     actionLoading?: boolean;
     actionDone?: boolean;
     onaction?: () => void;
+    actionHoverOnly?: boolean;
     onclose?: {
         handler: () => void;
         loading?: boolean;
@@ -42,6 +43,7 @@ type $$ComponentProps = {
     activeTab?: string;
     ontabchange?: (id: string) => void;
     onselect?: (tabId: string, item: ListItem) => void;
+    onissueclick?: (n: number) => void;
     /** Snippet rendu inline sous l'item sélectionné : (tabId, itemId) */
     detail?: Snippet<[string, string]>;
     /** Snippet rendu pour un onglet sans items : (tabId) */
