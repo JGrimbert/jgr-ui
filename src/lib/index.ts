@@ -13,4 +13,4 @@ export { default as JgrPre      } from './components/JgrPre.svelte';
 export type { LogEntry     } from './components/JgrConsole.svelte';
 export type { PromptSection } from './components/JgrPrompt.svelte';
 export type { ListItem, TabDef } from './components/JgrTabList.svelte';
-export type { RoadmapStep, RoadmapData } from './components/JgrRoadmap.svelte';
+export type { RoadmapStep, RoadmapData, IssueCluster } from './components/JgrRoadmap.svelte';

@@ -57,7 +57,9 @@
 
   function toggleCollapse(panel: 'left' | 'right') {
     collapsed = { ...collapsed, [panel]: !collapsed[panel] };
-    try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed)); } catch { /* ignore */ }
+    if (showStrips) {
+      try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed)); } catch { /* ignore */ }
+    }
   }
 
   let dragging: 'left' | 'right' | null = $state(null);
@@ -88,10 +90,12 @@
 
   onMount(() => {
     widths = loadWidths();
-    try {
-      const raw = localStorage.getItem(COLLAPSED_KEY);
-      if (raw) collapsed = JSON.parse(raw);
-    } catch { /* ignore */ }
+    if (showStrips) {
+      try {
+        const raw = localStorage.getItem(COLLAPSED_KEY);
+        if (raw) collapsed = JSON.parse(raw);
+      } catch { /* ignore */ }
+    }
   });
 </script>
 
