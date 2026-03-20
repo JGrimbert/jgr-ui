@@ -303,17 +303,27 @@
     return undefined;
   });
 
-  // Roadmap pour le DAG droit : toujours la vue clusters (référence fixe).
-  const clusterDagRoadmap = $derived.by((): RoadmapData | undefined => {
+  // Option du panneau droit : 'mirror' (même vue que gauche) ou 'clusters' (vue clusters fixe).
+  let rightOption: 'mirror' | 'clusters' = $state('mirror');
+
+  function cycleRightOption() {
+    rightOption = rightOption === 'mirror' ? 'clusters' : 'mirror';
+  }
+
+  // Roadmap pour le DAG droit selon l'option choisie.
+  const rightDagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
+    if (rightOption === 'mirror') return dagRoadmap;
+    // 'clusters' : vue clusters fixe quelle que soit l'onglet gauche
     const allSteps = roadmap.steps;
     const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
     const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
     return buildClusterRoadmap(issueSteps, clusters ?? []);
   });
 
-  // activeIds pour le DAG clusters : index du cluster sélectionné (uniquement si onglet clusters actif).
-  const clusterActiveIds = $derived.by(() => {
+  // activeIds pour le DAG droit : suit la sélection gauche, sauf en mode clusters.
+  const rightActiveIds = $derived.by((): number[] => {
+    if (rightOption === 'mirror') return activeIds;
     if (!selectedItemId?.startsWith('cluster-')) return [];
     const keyword = selectedItemId.replace('cluster-', '');
     const ci = (clusters ?? []).findIndex(c => c.keyword === keyword);
@@ -384,9 +394,16 @@
               {/if}
             </div>
             <div class="dag-panel">
-              <span class="dag-panel-label">Clusters</span>
-              {#if clusterDagRoadmap}
-                <JgrDag roadmap={clusterDagRoadmap} activeIds={clusterActiveIds} />
+              <span class="dag-panel-label">
+                {rightOption === 'mirror'
+                  ? (activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps')
+                  : 'Clusters'}
+              </span>
+              <button class="dag-option-btn" onclick={cycleRightOption} title="Changer la vue du panneau droit">
+                {rightOption === 'mirror' ? '⊜' : '◎'}
+              </button>
+              {#if rightDagRoadmap}
+                <JgrDag roadmap={rightDagRoadmap} activeIds={rightActiveIds} />
               {/if}
             </div>
           </div>
@@ -492,6 +509,21 @@
   color: var(--text-dim, #333);
   pointer-events: none;
 }
+.dag-option-btn {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: var(--text-dim, #333);
+  font-size: 0.75rem;
+  padding: 2px 3px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.dag-option-btn:hover { color: var(--accent, #9181f9); }
 .placeholder {
   flex: 1;
   display: flex;
