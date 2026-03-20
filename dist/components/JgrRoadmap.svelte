@@ -27,6 +27,14 @@
     concepts?: Array<{ id: string; name: string; skill: string; nodes: string[] }>;
   };
 
+  export type IssueCluster = {
+    keyword: string;
+    keywords: string[];
+    issues: number[];
+    score: number;
+    hasParent: boolean;
+  };
+
   const SKILL_COLOR: Record<string, string> = {
     domain:      '9181f9',
     entrypoint:  'c97844',
@@ -45,8 +53,10 @@
     onissuefilter,
     ontabchange,
     onissueclick,
+    clusters,
   }: {
     roadmap?: RoadmapData;
+    clusters?: IssueCluster[];
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;
     onRegenerate?: () => void;
@@ -63,18 +73,6 @@
     const counts: Record<string, number> = {};
     for (const s of steps) counts[s.skill] = (counts[s.skill] ?? 0) + 1;
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'internal';
-  }
-
-  function stepKey(step: RoadmapStep, depth: number): string {
-    const file = step.files?.[0];
-    if (file) {
-      const parts = file.replace(/\\/g, '/').split('/')
-        .filter(p => p && !p.startsWith('+') && !p.includes('.'));
-      const idx = parts.length - 1 - depth;
-      if (idx >= 0) return parts[idx];
-      if (parts.length > 0) return parts[parts.length - 1];
-    }
-    return step.label.split(': ')[1] || step.label || 'misc';
   }
 
   // Construit un RoadmapData avec 1 nœud par couple (step, issue) pour l'onglet Tasks.
@@ -117,42 +115,35 @@
     };
   }
 
-  // Construit un RoadmapData synthétique à partir de groupes (pour Étapes/Dossiers/Domaines).
-  // Chaque groupe devient un nœud ; les arêtes sont dérivées des dépendances entre steps.
-  function buildGroupRoadmap(steps: RoadmapStep[], depth: 0 | 1 | 2): RoadmapData {
-    const groups = new Map<string, RoadmapStep[]>();
-    for (const step of steps) {
-      const k = depth === 0
-        ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
-        : depth === 1 ? stepKey(step, 1)
-        : (step.skill || 'internal');
-      if (!groups.has(k)) groups.set(k, []);
-      groups.get(k)!.push(step);
-    }
-    const sorted = [...groups.entries()]
-      .sort((a, b) => Math.min(...a[1].map(s => s.id)) - Math.min(...b[1].map(s => s.id)));
+  // Construit un RoadmapData synthétique à partir des clusters.
+  // Chaque cluster devient un nœud ; les arêtes sont dérivées des dépendances entre steps.
+  function buildClusterRoadmap(steps: RoadmapStep[], cls: IssueCluster[]): RoadmapData {
+    const stepToCluster = new Map<number, number>();
+    cls.forEach((c, ci) => {
+      for (const s of steps) {
+        if (!stepToCluster.has(s.id) && (s.issues ?? []).some(n => c.issues.includes(n)))
+          stepToCluster.set(s.id, ci);
+      }
+    });
 
-    // stepId → index de groupe
-    const stepToGroup = new Map<number, number>();
-    sorted.forEach(([, ss], idx) => ss.forEach(s => stepToGroup.set(s.id, idx)));
-
-    const syntheticSteps: RoadmapStep[] = sorted.map(([key, ss], idx) => {
-      const depGroups = new Set<number>();
-      for (const step of ss)
-        for (const dep of step.dependsOnSteps) {
-          const g = stepToGroup.get(dep);
-          if (g !== undefined && g !== idx) depGroups.add(g);
+    const syntheticSteps: RoadmapStep[] = cls.map((c, ci) => {
+      const memberSteps = steps.filter(s => stepToCluster.get(s.id) === ci);
+      const depClusters = new Set<number>();
+      for (const s of memberSteps)
+        for (const dep of s.dependsOnSteps) {
+          const g = stepToCluster.get(dep);
+          if (g !== undefined && g !== ci) depClusters.add(g);
         }
       return {
-        id: idx,
-        label: key,
-        skill: dominantSkill(ss),
-        concept: key,
-        nodes: ss.flatMap(s => s.nodes),
-        files: ss.flatMap(s => s.files),
+        id: ci,
+        label: c.keyword,
+        skill: dominantSkill(memberSteps.length ? memberSteps : [{ skill: 'internal' } as RoadmapStep]),
+        concept: c.keyword,
+        nodes: memberSteps.flatMap(s => s.nodes),
+        files: memberSteps.flatMap(s => s.files),
         rationale: '',
-        dependsOnSteps: [...depGroups],
-        issues: [...new Set(ss.flatMap(s => s.issues ?? []))],
+        dependsOnSteps: [...depClusters],
+        issues: c.issues,
       };
     });
 
@@ -160,37 +151,8 @@
     return {
       steps: syntheticSteps,
       spine: [],
-      stats: { nodes: steps.length, edges: edgeCount, levels: 0, steps: syntheticSteps.length },
+      stats: { nodes: syntheticSteps.length, edges: edgeCount, levels: 0, steps: syntheticSteps.length },
     };
-  }
-
-  // depth 0 = étapes (concept/fichier), 1 = dossiers, 2 = domaines (skill)
-  function buildStackItems(steps: RoadmapStep[], depth: number): ListItem[] {
-    const groups = new Map<string, RoadmapStep[]>();
-    for (const step of steps) {
-      const k = depth === 0
-        ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
-        : depth === 1
-          ? stepKey(step, 1)
-          : (step.skill || 'internal');
-      if (!groups.has(k)) groups.set(k, []);
-      groups.get(k)!.push(step);
-    }
-    return [...groups.entries()]
-      .sort((a, b) => Math.min(...a[1].map(s => s.id)) - Math.min(...b[1].map(s => s.id)))
-      .map(([key, ss]) => {
-        const issueNums = [...new Set(ss.flatMap(s => s.issues ?? []))];
-        return {
-          id: `stack-${depth}-${key}`,
-          label: key,
-          prefix: String(ss.length),
-          labels: [
-            { name: dominantSkill(ss), color: SKILL_COLOR[dominantSkill(ss)] ?? '555566' },
-            ...issueNums.map(n => ({ name: `#${n}`, color: '446688' })),
-          ],
-          issues: issueNums,
-        };
-      });
   }
 
   // Map itemId → stepIds pour la mise en évidence dans JgrDag
@@ -205,19 +167,11 @@
 
     steps.forEach(s => map.set(String(s.id), [s.id]));
 
-    for (const depth of [0, 1, 2] as const) {
-      const groups = new Map<string, RoadmapStep[]>();
-      for (const step of steps) {
-        const k = depth === 0
-          ? (step.coalNodeId ?? step.concept ?? stepKey(step, 0))
-          : depth === 1 ? stepKey(step, 1)
-          : (step.skill || 'internal');
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k)!.push(step);
-      }
-      for (const [key, ss] of groups) {
-        map.set(`stack-${depth}-${key}`, ss.map(s => s.id));
-      }
+    for (const c of (clusters ?? [])) {
+      const clusterStepIds = steps
+        .filter(s => (s.issues ?? []).some(n => c.issues.includes(n)))
+        .map(s => s.id);
+      map.set(`cluster-${c.keyword}`, clusterStepIds);
     }
     return map;
   });
@@ -268,19 +222,45 @@
       id: String(s.id),
       label: s.label,
       prefix: s.isSpine ? '◉' : String(s.id),
-      labels: [
-        { name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' },
-        ...(s.issues ?? []).map(n => ({ name: `#${n}`, color: '446688' })),
-      ],
+      labels: [{ name: s.skill, color: SKILL_COLOR[s.skill] ?? '555566' }],
       issues: s.issues ?? [],
     }));
 
+    // Calcul du score d'homogénéité pour chaque cluster (issues / keywords)
+    const clusterRatios = (clusters ?? []).map(c => ({
+      cluster: c,
+      memberSteps: steps.filter(s => (s.issues ?? []).some(n => c.issues.includes(n))),
+      ratio: c.issues.length / Math.max(1, c.keywords.length),
+    }));
+    const maxRatio = Math.max(1, ...clusterRatios.map(x => x.ratio));
+
+    const clusterItems: ListItem[] = clusterRatios.map(({ cluster: c, memberSteps, ratio }) => {
+      // Skills dominants du cluster (top 2)
+      const skillCounts: Record<string, number> = {};
+      for (const s of memberSteps) skillCounts[s.skill] = (skillCounts[s.skill] ?? 0) + 1;
+      const topSkills = Object.entries(skillCounts).sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+      // Note d'homogénéité normalisée 0-100
+      const homoScore = Math.round(ratio / maxRatio * 100);
+      const homoColor = homoScore >= 65 ? '3a8a5a' : homoScore >= 35 ? 'd4a860' : 'c47070';
+
+      return {
+        id: `cluster-${c.keyword}`,
+        label: c.keyword,
+        prefix: String(c.issues.length),
+        labels: [
+          ...topSkills.map(([sk]) => ({ name: sk, color: SKILL_COLOR[sk] ?? '555566' })),
+          { name: `∼${homoScore}%`, color: homoColor },
+          ...c.keywords.slice(1, 3).map(k => ({ name: k, color: '445566' })),
+        ],
+        issues: c.issues,
+      };
+    });
+
     return [
-      { id: 'tasks',    label: 'Tasks',    items: taskItems,                    empty: 'Aucun step lié à des issues' },
-      { id: 'steps',    label: 'Steps',    items: stepItems,                    empty: 'Aucun step' },
-      { id: 'etapes',   label: 'Étapes',   items: buildStackItems(steps, 0),   empty: 'Aucune donnée' },
-      { id: 'dossiers', label: 'Dossiers', items: buildStackItems(steps, 1),   empty: 'Aucune donnée' },
-      { id: 'domaines', label: 'Domaines', items: buildStackItems(steps, 2),   empty: 'Aucune donnée' },
+      { id: 'tasks',    label: 'Tasks',    items: taskItems,    empty: 'Aucun step lié à des issues' },
+      { id: 'steps',    label: 'Steps',    items: stepItems,    empty: 'Aucun step' },
+      { id: 'clusters', label: 'Clusters', items: clusterItems, empty: 'Aucun cluster détecté' },
     ];
   });
 
@@ -315,9 +295,12 @@
       };
     }
 
-    // Nœuds synthétiques groupés (étapes / dossiers / domaines)
-    const depth = activeTab === 'etapes' ? 0 : activeTab === 'dossiers' ? 1 : 2;
-    return buildGroupRoadmap(issueSteps, depth);
+    // Nœuds synthétiques par cluster
+    if (activeTab === 'clusters') {
+      return buildClusterRoadmap(issueSteps, clusters ?? []);
+    }
+
+    return undefined;
   });
 
   // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.

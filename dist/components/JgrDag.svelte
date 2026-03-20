@@ -48,9 +48,24 @@
       return l;
     }
 
-    for (const s of roadmap.steps) lvl(s.id);
+    for (const s of visibleSteps) lvl(s.id);
     return map;
   });
+
+  // Nœuds qui ont au moins un dépendant
+  const dependentSet = $derived.by(() => {
+    const set = new Set<number>();
+    for (const s of roadmap.steps)
+      for (const dep of s.dependsOnSteps) set.add(dep);
+    return set;
+  });
+
+  // Nœuds visibles : au moins une arête (entrante OU sortante)
+  const visibleSteps = $derived(
+    roadmap.steps.filter(s =>
+      s.dependsOnSteps.length > 0 || dependentSet.has(s.id)
+    )
+  );
 
   // ── Compute (x, y) per step ────────────────────────────────────
   const posMap = $derived.by(() => {
@@ -88,7 +103,7 @@
   });
 
   const edges = $derived(
-    roadmap.steps.flatMap(s =>
+    visibleSteps.flatMap(s =>
       s.dependsOnSteps.map(dep => ({ from: dep, to: s.id }))
     )
   );
@@ -190,7 +205,7 @@
 
     <!-- Nœuds -->
     <g class="vertices">
-      {#each roadmap.steps as step (step.id)}
+      {#each visibleSteps as step (step.id)}
         {@const pos = posMap.get(step.id)}
         {#if pos}
           {@const c = color(step.skill)}
@@ -217,7 +232,7 @@
 
     <!-- Labels -->
     <g class="labels" aria-hidden="true">
-      {#each roadmap.steps as step (step.id)}
+      {#each visibleSteps as step (step.id)}
         {@const pos = posMap.get(step.id)}
         {#if pos}
           {@const c = color(step.skill)}

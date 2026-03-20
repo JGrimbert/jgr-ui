@@ -28,8 +28,16 @@ export type RoadmapData = {
         nodes: string[];
     }>;
 };
+export type IssueCluster = {
+    keyword: string;
+    keywords: string[];
+    issues: number[];
+    score: number;
+    hasParent: boolean;
+};
 type $$ComponentProps = {
     roadmap?: RoadmapData;
+    clusters?: IssueCluster[];
     status?: 'loading' | 'ok' | 'empty' | 'generating' | 'error';
     generatedAt?: string;
     onRegenerate?: () => void;
