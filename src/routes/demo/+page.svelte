@@ -8,7 +8,7 @@
   import JgrTabList from '$lib/components/JgrTabList.svelte';
   import JgrRoadmap from '$lib/components/JgrRoadmap.svelte';
   import type { TabDef, ListItem } from '$lib/components/JgrTabList.svelte';
-  import type { RoadmapData } from '$lib/components/JgrRoadmap.svelte';
+  import type { RoadmapData, IssueCluster } from '$lib/components/JgrRoadmap.svelte';
   import type { LogEntry } from '$lib/components/JgrConsole.svelte';
 
   // ── JgrCta ──────────────────────────────────────────────────────────────────
@@ -220,6 +220,130 @@
       demoGeneratedAt = new Date().toLocaleTimeString('fr-FR');
     }, 2000);
   }
+
+  // ── Claudicator — mockup roadmap + clusters ───────────────────────────────
+  const claudicatorRoadmap: RoadmapData = {
+    steps: [
+      {
+        id: 1, label: 'entrypoint: ClaudicatorEntry', skill: 'entrypoint',
+        nodes: ['ClaudicatorEntry'], files: ['src/index.ts'],
+        rationale: 'Point d\'entrée principal : initialise config, logger et session',
+        dependsOnSteps: [], isSpine: true, concept: 'core',
+      },
+      {
+        id: 2, label: 'domain: RepoScanner', skill: 'domain',
+        nodes: ['RepoScanner', 'FileWalker'], files: ['src/scanner/repo.ts', 'src/scanner/walker.ts'],
+        rationale: 'Parcourt le dépôt et construit l\'inventaire des fichiers sources',
+        dependsOnSteps: [1], issues: [4, 5], concept: 'scan',
+      },
+      {
+        id: 3, label: 'domain: AstParser', skill: 'domain',
+        nodes: ['AstParser', 'NodeVisitor'], files: ['src/ast/parser.ts', 'src/ast/visitor.ts'],
+        rationale: 'Parse les fichiers via ts-morph et extrait nœuds, exports, imports',
+        dependsOnSteps: [2], issues: [5], concept: 'ast',
+      },
+      {
+        id: 4, label: 'domain: DependencyGraph', skill: 'domain',
+        nodes: ['DependencyGraph', 'EdgeResolver'], files: ['src/graph/dependency.ts'],
+        rationale: 'Construit le DAG de dépendances inter-modules à partir de l\'AST',
+        dependsOnSteps: [3], isSpine: true, issues: [1, 2], concept: 'graph',
+      },
+      {
+        id: 5, label: 'domain: StepPlanner', skill: 'domain',
+        nodes: ['StepPlanner', 'ConceptMapper'], files: ['src/planner/steps.ts', 'src/planner/concepts.ts'],
+        rationale: 'Génère les steps de roadmap depuis le graphe et détecte les nœuds critiques',
+        dependsOnSteps: [4], isSpine: true, issues: [2, 6], concept: 'plan',
+      },
+      {
+        id: 6, label: 'domain: ClusterEngine', skill: 'domain',
+        nodes: ['ClusterEngine', 'KeywordExtractor'], files: ['src/cluster/engine.ts'],
+        rationale: 'Groupe les issues par thème via TF-IDF sur les labels et titres',
+        dependsOnSteps: [2], issues: [2], concept: 'cluster',
+      },
+      {
+        id: 7, label: 'flow: RoadmapOrchestrator', skill: 'flow',
+        nodes: ['RoadmapOrchestrator'], files: ['src/flow/orchestrator.ts'],
+        rationale: 'Coordonne scan → parse → plan → cluster et produit le RoadmapData final',
+        dependsOnSteps: [5, 6], isSpine: true, issues: [1, 6], concept: 'core',
+      },
+      {
+        id: 8, label: 'api: RoadmapApi', skill: 'api',
+        nodes: ['RoadmapApi', 'RoadmapSerializer'], files: ['src/api/roadmap.ts'],
+        rationale: 'Expose /roadmap et /roadmap/regenerate via HTTP ; sérialise vers JSON',
+        dependsOnSteps: [7], concept: 'api',
+      },
+      {
+        id: 9, label: 'utility: CacheLayer', skill: 'utility',
+        nodes: ['CacheLayer', 'HashKey'], files: ['src/cache/layer.ts'],
+        rationale: 'Met en cache les analyses AST sur disque pour éviter le re-parse',
+        dependsOnSteps: [2], issues: [4], concept: 'infra',
+      },
+      {
+        id: 10, label: 'integration: GithubSync', skill: 'integration',
+        nodes: ['GithubSync', 'IssueLoader'], files: ['src/github/sync.ts', 'src/github/issues.ts'],
+        rationale: 'Charge les issues GitHub et les associe aux clusters via leur numéro',
+        dependsOnSteps: [7], isSpine: true, issues: [3, 6, 8], concept: 'github',
+      },
+      {
+        id: 11, label: 'internal: TypeIndex', skill: 'internal',
+        nodes: ['TypeIndex'], files: ['src/ast/type-index.ts'],
+        rationale: 'Index interne des types exportés — utilisé par NodeVisitor',
+        dependsOnSteps: [3], issues: [5],
+      },
+    ],
+    spine: ['ClaudicatorEntry', 'DependencyGraph', 'StepPlanner', 'RoadmapOrchestrator', 'GithubSync'],
+    stats: { nodes: 83, edges: 61, levels: 6, steps: 11 },
+    concepts: [
+      { id: 'core',    name: 'Core',            skill: 'entrypoint', nodes: ['ClaudicatorEntry', 'RoadmapOrchestrator'] },
+      { id: 'ast',     name: 'AST Parsing',     skill: 'domain',     nodes: ['AstParser', 'NodeVisitor', 'TypeIndex'] },
+      { id: 'graph',   name: 'Dependency DAG',  skill: 'domain',     nodes: ['DependencyGraph', 'EdgeResolver'] },
+      { id: 'plan',    name: 'Step Planning',   skill: 'domain',     nodes: ['StepPlanner', 'ConceptMapper'] },
+      { id: 'cluster', name: 'Issue Clustering',skill: 'domain',     nodes: ['ClusterEngine', 'KeywordExtractor'] },
+      { id: 'github',  name: 'GitHub',          skill: 'integration',nodes: ['GithubSync', 'IssueLoader'] },
+      { id: 'infra',   name: 'Cache / Infra',   skill: 'utility',    nodes: ['CacheLayer'] },
+    ],
+  };
+
+  const claudicatorClusters: IssueCluster[] = [
+    {
+      keyword: 'graph',
+      keywords: ['dag', 'visualisation', 'svg', 'nœud', 'arête'],
+      issues: [1, 2, 7],
+      score: 0.82,
+      hasParent: false,
+    },
+    {
+      keyword: 'analysis',
+      keywords: ['ast', 'parser', 'dépendance', 'step', 'type'],
+      issues: [2, 5, 6],
+      score: 0.74,
+      hasParent: false,
+    },
+    {
+      keyword: 'github',
+      keywords: ['github', 'sync', 'oauth', 'issues', 'rate-limit'],
+      issues: [3, 6, 8],
+      score: 0.68,
+      hasParent: false,
+    },
+    {
+      keyword: 'performance',
+      keywords: ['cache', 'latence', 'timeout', 'mémoire'],
+      issues: [1, 4, 8],
+      score: 0.55,
+      hasParent: false,
+    },
+  ];
+
+  let claudicatorStatus = $state<'ok'|'generating'>('ok');
+  let claudicatorGeneratedAt = $state(new Date().toLocaleTimeString('fr-FR'));
+  function claudicatorRegenerate() {
+    claudicatorStatus = 'generating';
+    setTimeout(() => {
+      claudicatorStatus = 'ok';
+      claudicatorGeneratedAt = new Date().toLocaleTimeString('fr-FR');
+    }, 2000);
+  }
 </script>
 
 <div style="padding: 2rem 3rem; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem;">
@@ -325,6 +449,24 @@
         status={demoRoadmapStatus}
         generatedAt={demoGeneratedAt}
         onRegenerate={demoRegenerate}
+      />
+    </div>
+  </section>
+
+  <!-- ── Claudicator — roadmap avec clusters ── -->
+  <section>
+    <h2 class="section-title">Claudicator — mockup roadmap + clusters</h2>
+    <p class="demo-desc">
+      11 steps, 5 nœuds épine, 4 clusters d'issues.<br/>
+      Les onglets <strong>Steps</strong> et <strong>Clusters</strong> montrent les deux vues du graphe.
+    </p>
+    <div style="height: 520px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden;">
+      <JgrRoadmap
+        roadmap={claudicatorRoadmap}
+        clusters={claudicatorClusters}
+        status={claudicatorStatus}
+        generatedAt={claudicatorGeneratedAt}
+        onRegenerate={claudicatorRegenerate}
       />
     </div>
   </section>
