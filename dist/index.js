@@ -9,3 +9,4 @@ export { default as JgrConsole } from './components/JgrConsole.svelte';
 export { default as JgrTabList } from './components/JgrTabList.svelte';
 export { default as JgrDag } from './components/JgrDag.svelte';
 export { default as JgrRoadmap } from './components/JgrRoadmap.svelte';
+export { default as JgrPre } from './components/JgrPre.svelte';
