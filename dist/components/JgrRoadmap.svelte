@@ -268,57 +268,30 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
-  // Roadmap pour le DAG gauche : chaque onglet produit une vue différente.
+  // Helpers partagés
+  const issueSteps = $derived.by(() => {
+    const allSteps = roadmap?.steps ?? [];
+    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
+    return hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
+  });
+
+  // DAG gauche : issueSteps avec leurs dépendances originales (non filtrées)
+  // JgrDag ignore silencieusement les arêtes vers des nœuds absents
   const dagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
-
-    const allSteps = roadmap.steps;
-    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
-    const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
-
-    // Vue par onglet
-    if (activeTab === 'tasks') {
-      // 1 nœud par couple (step, issue) → 188 nœuds
-      return buildTaskRoadmap(issueSteps);
-    }
-
-    if (activeTab === 'steps') {
-      // 1 nœud par step → 44 nœuds
-      const keptIds = new Set(issueSteps.map(s => s.id));
-      return {
-        ...roadmap,
-        steps: issueSteps.map(s => ({
-          ...s,
-          dependsOnSteps: s.dependsOnSteps.filter(id => keptIds.has(id)),
-        })),
-        stats: { ...roadmap.stats, steps: issueSteps.length },
-      };
-    }
-
-    // Nœuds synthétiques par cluster
-    if (activeTab === 'clusters') {
-      return buildClusterRoadmap(issueSteps, clusters ?? []);
-    }
-
-    return undefined;
+    return { ...roadmap, steps: issueSteps };
   });
 
-  // Roadmap pour le DAG droit : toujours la vue clusters (référence fixe).
-  const clusterDagRoadmap = $derived.by((): RoadmapData | undefined => {
+  // DAG droit : 1 nœud par item de la liste active
+  const rightDagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
-    const allSteps = roadmap.steps;
-    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
-    const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
-    return buildClusterRoadmap(issueSteps, clusters ?? []);
+    if (activeTab === 'tasks') return dagRoadmap ? buildTaskRoadmap(dagRoadmap.steps) : undefined;
+    if (activeTab === 'clusters') return buildClusterRoadmap(issueSteps, clusters ?? []);
+    // steps : même graphe que gauche
+    return dagRoadmap;
   });
 
-  // activeIds pour le DAG clusters : index du cluster sélectionné (uniquement si onglet clusters actif).
-  const clusterActiveIds = $derived.by(() => {
-    if (!selectedItemId?.startsWith('cluster-')) return [];
-    const keyword = selectedItemId.replace('cluster-', '');
-    const ci = (clusters ?? []).findIndex(c => c.keyword === keyword);
-    return ci >= 0 ? [ci] : [];
-  });
+  const rightActiveIds = $derived(activeIds);
 
   // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.
   // On utilise untrack pour lire `tabs` sans créer de dépendance réactive dessus :
@@ -378,15 +351,15 @@
         {:else}
           <div class="dag-panels">
             <div class="dag-panel">
-              <span class="dag-panel-label">{activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps'}</span>
+              <span class="dag-panel-label">Steps</span>
               {#if dagRoadmap}
                 <JgrDag roadmap={dagRoadmap} {activeIds} />
               {/if}
             </div>
             <div class="dag-panel">
-              <span class="dag-panel-label">Clusters</span>
-              {#if clusterDagRoadmap}
-                <JgrDag roadmap={clusterDagRoadmap} activeIds={clusterActiveIds} />
+              <span class="dag-panel-label">{activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps'}</span>
+              {#if rightDagRoadmap}
+                <JgrDag roadmap={rightDagRoadmap} activeIds={rightActiveIds} />
               {/if}
             </div>
           </div>

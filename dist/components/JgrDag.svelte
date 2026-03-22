@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { RoadmapData } from './JgrRoadmap.svelte';
+  import { layoutDAG } from '../utils/DagOrb.js';
 
   let {
     roadmap,
@@ -12,14 +13,8 @@
   } = $props();
 
   // ── Layout constants ───────────────────────────────────────────
-  const LH  = 107; // vertical spacing between levels
-  const GAP = 20;  // horizontal gap between nodes
-  const MX  = 160; // left margin
-  const MY  = 80;  // top margin
-
-  const STREAM_GAP   = 60;  // espace horizontal entre bandes
-  const MAX_PER_ROW  = 8;   // nœuds max par sous-ligne de tête
-  const HEAD_ROW_GAP = LH;  // espacement vertical sous-lignes de tête (= LH pour aligner la grille)
+  const MX  = 80;  // left/right margin
+  const MY  = 80;  // top/bottom margin
 
   const SKILL_COLOR: Record<string, string> = {
     domain:      '#9181f9',
@@ -81,115 +76,27 @@
     return map;
   });
 
-  // ── Compute (x, y) per step — layout "Streams" ────────────────
+  // ── Compute (x, y) per step — layout DagOrb ──────────────────
   const posMap = $derived.by(() => {
-    // Phase A — Union-Find sur visibleSteps
-    const parent = new Map<number, number>();
-    for (const s of visibleSteps) parent.set(s.id, s.id);
-
-    function find(x: number): number {
-      if (parent.get(x) !== x) parent.set(x, find(parent.get(x)!));
-      return parent.get(x)!;
-    }
-    function union(a: number, b: number) {
-      parent.set(find(a), find(b));
-    }
-    for (const s of visibleSteps)
-      for (const dep of s.dependsOnSteps) union(s.id, dep);
-
-    // Grouper par racine → composantes connexes
-    const componentMap = new Map<number, number[]>();
-    for (const s of visibleSteps) {
-      const root = find(s.id);
-      if (!componentMap.has(root)) componentMap.set(root, []);
-      componentMap.get(root)!.push(s.id);
-    }
-
-    // Phase B — StreamInfo pour chaque composante
-    type StreamInfo = {
-      nodes: number[];
-      headRows: number[][];
-      bodyLevels: Map<number, number[]>;
-      bandWidth: number;
-      bandX: number;
-    };
-
-    function rowWidth(ids: number[]): number {
-      if (!ids.length) return 0;
-      return ids.reduce((sum, id) => sum + 2 * nodeR(id), 0) + (ids.length - 1) * GAP;
-    }
-
-    const streams: StreamInfo[] = [];
-    for (const [, nodes] of componentMap) {
-      const headNodes = nodes.filter(id => (levelMap.get(id) ?? 0) === 0);
-      headNodes.sort((a, b) => a - b);
-
-      // Découper headNodes en tranches de MAX_PER_ROW
-      const headRows: number[][] = [];
-      for (let i = 0; i < headNodes.length; i += MAX_PER_ROW)
-        headRows.push(headNodes.slice(i, i + MAX_PER_ROW));
-
-      // Grouper les nœuds de niveau > 0 par level
-      const bodyLevels = new Map<number, number[]>();
-      for (const id of nodes) {
-        const lv = levelMap.get(id) ?? 0;
-        if (lv === 0) continue;
-        if (!bodyLevels.has(lv)) bodyLevels.set(lv, []);
-        bodyLevels.get(lv)!.push(id);
-      }
-      for (const ids of bodyLevels.values()) ids.sort((a, b) => a - b);
-
-      // bandWidth = max de toutes les largeurs de ligne
-      const allWidths = [
-        ...headRows.map(r => rowWidth(r)),
-        ...[...bodyLevels.values()].map(r => rowWidth(r)),
-      ];
-      const bandWidth = Math.max(0, ...allWidths);
-
-      streams.push({ nodes, headRows, bodyLevels, bandWidth, bandX: 0 });
-    }
-
-    // Phase C — Trier par taille décroissante et placer horizontalement
-    streams.sort((a, b) => b.nodes.length - a.nodes.length);
-    let cursor = MX;
-    for (const s of streams) {
-      s.bandX = cursor;
-      cursor += s.bandWidth + STREAM_GAP;
-    }
-    const globalMaxHeadRows = Math.max(0, ...streams.map(s => s.headRows.length));
-
-    // Phase D — Positions intra-stream
+    const nodes = visibleSteps.map(s => ({ id: s.id }));
+    const edges = visibleSteps.flatMap(s =>
+      s.dependsOnSteps.map(dep => ({ from: dep, to: s.id }))
+    );
+    const raw = layoutDAG(nodes, edges);
+    // Applique les marges écran
     const pos = new Map<number, { x: number; y: number }>();
+    for (const [id, p] of raw) pos.set(id as number, { x: p.x + MX, y: p.y + MY });
+    return { pos };
+  });
 
-    for (const s of streams) {
-      // Tête : alignée par le bas (streams plus courts décalés vers le bas)
-      for (let i = 0; i < s.headRows.length; i++) {
-        const row = s.headRows[i];
-        const yOffset = globalMaxHeadRows - s.headRows.length;
-        const y = MY + (yOffset + i) * HEAD_ROW_GAP;
-        const rw = rowWidth(row);
-        let x = s.bandX + (s.bandWidth - rw) / 2;
-        for (const id of row) {
-          const r = nodeR(id);
-          pos.set(id, { x: x + r, y });
-          x += 2 * r + GAP;
-        }
-      }
-
-      // Corps : après la tête, un niveau par ligne
-      for (const [lv, ids] of s.bodyLevels) {
-        const y = MY + globalMaxHeadRows * HEAD_ROW_GAP + (lv - 1) * LH;
-        const rw = rowWidth(ids);
-        let x = s.bandX + (s.bandWidth - rw) / 2;
-        for (const id of ids) {
-          const r = nodeR(id);
-          pos.set(id, { x: x + r, y });
-          x += 2 * r + GAP;
-        }
-      }
+  // y de chaque niveau pour les level-lines
+  const levelY = $derived.by(() => {
+    const m = new Map<number, number>();
+    for (const [id, p] of posMap.pos) {
+      const lv = levelMap.get(id) ?? 0;
+      if (!m.has(lv)) m.set(lv, p.y);
     }
-
-    return { pos, globalMaxHeadRows };
+    return m;
   });
 
   const distinctLevels = $derived(
@@ -318,17 +225,8 @@
   <g transform="translate({tx},{ty}) scale({sc})">
     <!-- Grille de niveaux -->
     <g class="level-lines">
-      <!-- Sous-lignes de la tête (niveau 0) -->
-      {#each {length: posMap.globalMaxHeadRows} as _, i}
-        {@const y = MY + i * HEAD_ROW_GAP}
-        <line x1="0" y1={y} x2={maxX} y2={y}
-              stroke="#4d3fa0" stroke-width="0.3" opacity="0.2" stroke-dasharray="4,8"/>
-        <text x="8" y={y - 6} font-size="9" fill="#7c6af7" opacity="0.5"
-              font-family="monospace">L0.{i}</text>
-      {/each}
-      <!-- Niveaux du corps (lv > 0) -->
-      {#each distinctLevels.filter(lv => lv > 0) as lv}
-        {@const y = MY + posMap.globalMaxHeadRows * HEAD_ROW_GAP + (lv - 1) * LH}
+      {#each distinctLevels as lv}
+        {@const y = levelY.get(lv) ?? 0}
         <line x1="0" y1={y} x2={maxX} y2={y}
               stroke="#4d3fa0" stroke-width="0.3" opacity="0.2" stroke-dasharray="4,8"/>
         <text x="8" y={y - 6} font-size="9" fill="#7c6af7" opacity="0.5"

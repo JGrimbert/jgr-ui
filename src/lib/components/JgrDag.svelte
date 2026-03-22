@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { RoadmapData } from './JgrRoadmap.svelte';
-  import { layoutDAG } from 'lolve/src/dag/DagOrb.js';
+  import { layoutDAG } from '../utils/DagOrb.js';
 
   let {
     roadmap,
