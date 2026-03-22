@@ -465,6 +465,21 @@
   color: var(--text-dim, #333);
   pointer-events: none;
 }
+.dag-option-btn {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: var(--text-dim, #333);
+  font-size: 0.75rem;
+  padding: 2px 3px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.dag-option-btn:hover { color: var(--accent, #9181f9); }
 .placeholder {
   flex: 1;
   display: flex;
