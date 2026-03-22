@@ -5,15 +5,34 @@
  * @param {Array<{from: *, to: *}>} edges
  * @returns {Map<*, {x: number, y: number}>}
  */
-export function layoutDAG(nodes: Array<{
+/**
+ * Exporte le calcul de niveaux topologiques pour usage externe.
+ *
+ * @param {Array<{id: *}>} nodes
+ * @param {Array<{from: *, to: *}>} edges
+ * @returns {Map<*, number>}
+ */
+export function computeLevels(nodes: Array<{
     id: any;
 }>, edges: Array<{
     from: any;
     to: any;
-}>): Map<any, {
-    x: number;
-    y: number;
-}>;
+}>): Map<any, number>;
+/**
+ * Variante "gravité" : tout nœud de niveau 0 dont TOUS les enfants directs
+ * sont au niveau ≥ 2 descend au niveau (min_enfant_direct - 1).
+ *
+ * @param {Array<{id: *}>} nodes
+ * @param {Array<{from: *, to: *}>} edges
+ * @returns {Map<*, number>}
+ */
+export function computeGravityLevels(nodes: Array<{
+    id: any;
+}>, edges: Array<{
+    from: any;
+    to: any;
+}>): Map<any, number>;
+export function layoutDAG(nodes: any, edges: any, options: any): Map<any, any>;
 /**
  * DagOrb — Layout orbital de graphes dirigés acycliques
  *

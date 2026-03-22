@@ -1,15 +1,17 @@
 <script lang="ts">
   import type { RoadmapData } from './JgrRoadmap.svelte';
-  import { layoutDAG } from '../utils/DagOrb.js';
+  import { layoutDAG, computeLevels, computeGravityLevels } from '../utils/DagOrb.js';
 
   let {
     roadmap,
     activeIds = [],
     onNodeClick,
+    gravityMode = false,
   }: {
     roadmap: RoadmapData;
     activeIds?: number[];
     onNodeClick?: (id: number) => void;
+    gravityMode?: boolean;
   } = $props();
 
   // ── Layout constants ───────────────────────────────────────────
@@ -26,26 +28,15 @@
     internal:    '#555566',
   };
 
-  // ── Compute DAG level for each step ───────────────────────────
+  // ── Compute DAG level for each step (optionally with gravity law) ──────
   const levelMap = $derived.by(() => {
-    const map = new Map<number, number>();
-    const visiting = new Set<number>();
-
-    function lvl(id: number): number {
-      if (map.has(id)) return map.get(id)!;
-      if (visiting.has(id)) return 0; // cycle guard
-      visiting.add(id);
-      const s = roadmap.steps.find(x => x.id === id);
-      const l = (!s || s.dependsOnSteps.length === 0)
-        ? 0
-        : Math.max(...s.dependsOnSteps.map(lvl)) + 1;
-      visiting.delete(id);
-      map.set(id, l);
-      return l;
-    }
-
-    for (const s of visibleSteps) lvl(s.id);
-    return map;
+    const nodes = visibleSteps.map(s => ({ id: s.id }));
+    const edges = visibleSteps.flatMap(s =>
+      s.dependsOnSteps.map(dep => ({ from: dep, to: s.id }))
+    );
+    return gravityMode
+      ? computeGravityLevels(nodes, edges)
+      : computeLevels(nodes, edges);
   });
 
   // Nœuds qui ont au moins un dépendant
@@ -82,7 +73,7 @@
     const edges = visibleSteps.flatMap(s =>
       s.dependsOnSteps.map(dep => ({ from: dep, to: s.id }))
     );
-    const raw = layoutDAG(nodes, edges);
+    const raw = layoutDAG(nodes, edges, { levelMap });
     // Applique les marges écran
     const pos = new Map<number, { x: number; y: number }>();
     for (const [id, p] of raw) pos.set(id as number, { x: p.x + MX, y: p.y + MY });

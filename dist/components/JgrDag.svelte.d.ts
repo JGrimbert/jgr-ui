@@ -3,6 +3,7 @@ type $$ComponentProps = {
     roadmap: RoadmapData;
     activeIds?: number[];
     onNodeClick?: (id: number) => void;
+    gravityMode?: boolean;
 };
 declare const JgrDag: import("svelte").Component<$$ComponentProps, {}, "">;
 type JgrDag = ReturnType<typeof JgrDag>;

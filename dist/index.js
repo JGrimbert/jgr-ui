@@ -10,3 +10,6 @@ export { default as JgrTabList } from './components/JgrTabList.svelte';
 export { default as JgrDag } from './components/JgrDag.svelte';
 export { default as JgrRoadmap } from './components/JgrRoadmap.svelte';
 export { default as JgrPre } from './components/JgrPre.svelte';
+export { default as JgrBiblio } from './components/JgrBiblio.svelte';
+export { default as JgrBiblioSvg } from './components/JgrBiblioSvg.svelte';
+export { default as JgrBiblioInspector } from './components/JgrBiblioInspector.svelte';
