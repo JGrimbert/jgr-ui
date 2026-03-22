@@ -268,67 +268,30 @@
     tabs.map(t => ({ ...t, selectedId: selectedItemId ?? undefined }))
   );
 
-  // Roadmap pour le DAG gauche : chaque onglet produit une vue différente.
+  // Helpers partagés
+  const issueSteps = $derived.by(() => {
+    const allSteps = roadmap?.steps ?? [];
+    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
+    return hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
+  });
+
+  // DAG gauche : issueSteps avec leurs dépendances originales (non filtrées)
+  // JgrDag ignore silencieusement les arêtes vers des nœuds absents
   const dagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
-
-    const allSteps = roadmap.steps;
-    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
-    const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
-
-    // Vue par onglet
-    if (activeTab === 'tasks') {
-      // 1 nœud par couple (step, issue) → 188 nœuds
-      return buildTaskRoadmap(issueSteps);
-    }
-
-    if (activeTab === 'steps') {
-      // 1 nœud par step → 44 nœuds
-      const keptIds = new Set(issueSteps.map(s => s.id));
-      return {
-        ...roadmap,
-        steps: issueSteps.map(s => ({
-          ...s,
-          dependsOnSteps: s.dependsOnSteps.filter(id => keptIds.has(id)),
-        })),
-        stats: { ...roadmap.stats, steps: issueSteps.length },
-      };
-    }
-
-    // Nœuds synthétiques par cluster
-    if (activeTab === 'clusters') {
-      return buildClusterRoadmap(issueSteps, clusters ?? []);
-    }
-
-    return undefined;
+    return { ...roadmap, steps: issueSteps };
   });
 
-  // Option du panneau droit : 'mirror' (même vue que gauche) ou 'clusters' (vue clusters fixe).
-  let rightOption: 'mirror' | 'clusters' = $state('mirror');
-
-  function cycleRightOption() {
-    rightOption = rightOption === 'mirror' ? 'clusters' : 'mirror';
-  }
-
-  // Roadmap pour le DAG droit selon l'option choisie.
+  // DAG droit : 1 nœud par item de la liste active
   const rightDagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
-    if (rightOption === 'mirror') return dagRoadmap;
-    // 'clusters' : vue clusters fixe quelle que soit l'onglet gauche
-    const allSteps = roadmap.steps;
-    const hasIssueSteps = allSteps.some(s => (s.issues?.length ?? 0) > 0);
-    const issueSteps = hasIssueSteps ? allSteps.filter(s => (s.issues?.length ?? 0) > 0) : allSteps;
-    return buildClusterRoadmap(issueSteps, clusters ?? []);
+    if (activeTab === 'tasks') return dagRoadmap ? buildTaskRoadmap(dagRoadmap.steps) : undefined;
+    if (activeTab === 'clusters') return buildClusterRoadmap(issueSteps, clusters ?? []);
+    // steps : même graphe que gauche
+    return dagRoadmap;
   });
 
-  // activeIds pour le DAG droit : suit la sélection gauche, sauf en mode clusters.
-  const rightActiveIds = $derived.by((): number[] => {
-    if (rightOption === 'mirror') return activeIds;
-    if (!selectedItemId?.startsWith('cluster-')) return [];
-    const keyword = selectedItemId.replace('cluster-', '');
-    const ci = (clusters ?? []).findIndex(c => c.keyword === keyword);
-    return ci >= 0 ? [ci] : [];
-  });
+  const rightActiveIds = $derived(activeIds);
 
   // Quand l'onglet change : réinitialiser la sélection et notifier les issues du tab actif.
   // On utilise untrack pour lire `tabs` sans créer de dépendance réactive dessus :
@@ -388,20 +351,13 @@
         {:else}
           <div class="dag-panels">
             <div class="dag-panel">
-              <span class="dag-panel-label">{activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps'}</span>
+              <span class="dag-panel-label">Steps</span>
               {#if dagRoadmap}
                 <JgrDag roadmap={dagRoadmap} {activeIds} />
               {/if}
             </div>
             <div class="dag-panel">
-              <span class="dag-panel-label">
-                {rightOption === 'mirror'
-                  ? (activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps')
-                  : 'Clusters'}
-              </span>
-              <button class="dag-option-btn" onclick={cycleRightOption} title="Changer la vue du panneau droit">
-                {rightOption === 'mirror' ? '⊜' : '◎'}
-              </button>
+              <span class="dag-panel-label">{activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps'}</span>
               {#if rightDagRoadmap}
                 <JgrDag roadmap={rightDagRoadmap} activeIds={rightActiveIds} />
               {/if}
@@ -509,21 +465,6 @@
   color: var(--text-dim, #333);
   pointer-events: none;
 }
-.dag-option-btn {
-  position: absolute;
-  top: 3px;
-  right: 6px;
-  z-index: 2;
-  background: none;
-  border: none;
-  color: var(--text-dim, #333);
-  font-size: 0.75rem;
-  padding: 2px 3px;
-  cursor: pointer;
-  line-height: 1;
-  transition: color 0.15s;
-}
-.dag-option-btn:hover { color: var(--accent, #9181f9); }
 .placeholder {
   flex: 1;
   display: flex;

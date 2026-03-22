@@ -14,3 +14,6 @@ export type { LogEntry     } from './components/JgrConsole.svelte';
 export type { PromptSection } from './components/JgrPrompt.svelte';
 export type { ListItem, TabDef } from './components/JgrTabList.svelte';
 export type { RoadmapStep, RoadmapData, IssueCluster } from './components/JgrRoadmap.svelte';
+export { default as JgrBiblio          } from './components/JgrBiblio.svelte';
+export { default as JgrBiblioSvg       } from './components/JgrBiblioSvg.svelte';
+export { default as JgrBiblioInspector } from './components/JgrBiblioInspector.svelte';
