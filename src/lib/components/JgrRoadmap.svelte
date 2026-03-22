@@ -68,6 +68,8 @@
   let activeTab = $state('tasks');
   let selectedItemId: string | null = $state(null);
   let activeIds: number[] = $state([]);
+  let splitMode = $state(false);
+  let gravityMode = $state(false);
 
   function dominantSkill(steps: RoadmapStep[]): string {
     const counts: Record<string, number> = {};
@@ -282,6 +284,12 @@
     return { ...roadmap, steps: issueSteps };
   });
 
+  // DAG unifié : tous les steps sans filtre → graphe connexe
+  const unifiedDagRoadmap = $derived.by((): RoadmapData | undefined => {
+    if (!roadmap) return undefined;
+    return { ...roadmap, steps: roadmap.steps };
+  });
+
   // DAG droit : 1 nœud par item de la liste active
   const rightDagRoadmap = $derived.by((): RoadmapData | undefined => {
     if (!roadmap) return undefined;
@@ -303,6 +311,10 @@
     const currentTab = untrack(() => tabs).find(t => t.id === activeTab);
     const tabIssues = [...new Set((currentTab?.items ?? []).flatMap((item: any) => item.issues ?? []))];
     ontabchange?.(tabIssues);
+    // STEPS et CLUSTERS n'ont pas de vue unifiée → basculer automatiquement en vue fragmentée
+    if (activeTab === 'steps' || activeTab === 'clusters') {
+      splitMode = true;
+    }
   });
 </script>
 
@@ -325,6 +337,21 @@
         {#if generatedAt}
           <span class="topbar-date">{generatedAt}</span>
         {/if}
+        {#if !splitMode || activeTab === 'tasks'}
+          <button
+            class="topbar-btn"
+            class:topbar-btn-active={gravityMode}
+            onclick={() => gravityMode = !gravityMode}
+            title={gravityMode ? 'Désactiver la loi de gravité' : 'Loi de gravité — rapprocher les nœuds L0 isolés de leurs descendants'}
+          >↡</button>
+        {/if}
+        <button
+          class="topbar-btn"
+          onclick={() => splitMode = !splitMode}
+          title={splitMode ? 'Vue unifiée' : 'Vue en deux colonnes'}
+        >
+          {splitMode ? '⊡' : '⊞'}
+        </button>
         <button
           class="topbar-btn"
           onclick={onRegenerate}
@@ -348,20 +375,20 @@
           <div class="placeholder err">
             Erreur · <button onclick={onRegenerate}>Réessayer</button>
           </div>
-        {:else}
-          <div class="dag-panels">
-            <div class="dag-panel">
-              <span class="dag-panel-label">Steps</span>
-              {#if dagRoadmap}
-                <JgrDag roadmap={dagRoadmap} {activeIds} />
-              {/if}
-            </div>
+        {:else if splitMode}
+          <div class="dag-single">
             <div class="dag-panel">
               <span class="dag-panel-label">{activeTab === 'tasks' ? 'Tasks' : activeTab === 'clusters' ? 'Clusters' : 'Steps'}</span>
               {#if rightDagRoadmap}
-                <JgrDag roadmap={rightDagRoadmap} activeIds={rightActiveIds} />
+                <JgrDag roadmap={rightDagRoadmap} activeIds={rightActiveIds} gravityMode={activeTab === 'tasks' ? gravityMode : false} />
               {/if}
             </div>
+          </div>
+        {:else}
+          <div class="dag-single">
+            {#if unifiedDagRoadmap}
+              <JgrDag roadmap={unifiedDagRoadmap} {activeIds} {gravityMode} />
+            {/if}
           </div>
         {/if}
       </div>
@@ -424,6 +451,7 @@
 }
 .topbar-btn:hover:not(:disabled) { color: var(--accent, #9181f9); }
 .topbar-btn:disabled { opacity: 0.4; cursor: default; }
+.topbar-btn-active { color: var(--accent, #9181f9); }
 .topbar-date {
   font-size: 0.52rem;
   color: var(--text-dim, #333);
@@ -437,6 +465,11 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+}
+.dag-single {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
 }
 .dag-panels {
   flex: 1;

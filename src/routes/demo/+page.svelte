@@ -440,6 +440,16 @@
     </div>
   </section>
 
+  <!-- ── DAG Gravity démo ── -->
+  <section>
+    <h2 class="section-title">JgrDag — Gravity mode</h2>
+    <p class="demo-desc">
+      Démo isolée du toggle <strong>↡ gravité</strong> : les nœuds L0 dont tous les enfants directs
+      sont en L≥2 descendent vers leurs descendants.<br/>
+      <a href="/demo/dag" class="demo-link">→ Ouvrir la démo plein écran</a>
+    </p>
+  </section>
+
   <!-- ── JgrRoadmap ── -->
   <section>
     <h2 class="section-title">JgrRoadmap + JgrTabList</h2>
@@ -604,6 +614,12 @@
 .demo-desc strong {
   color: var(--text-secondary, #888);
 }
+.demo-link {
+  color: #9181f9;
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+.demo-link:hover { text-decoration: underline; }
 .demo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

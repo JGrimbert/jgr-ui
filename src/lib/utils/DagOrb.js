@@ -24,10 +24,51 @@ export const COMP_GAP    = 100; // espacement horizontal entre composantes
  * @param {Array<{from: *, to: *}>} edges
  * @returns {Map<*, {x: number, y: number}>}
  */
-export function layoutDAG(nodes, edges) {
+/**
+ * Exporte le calcul de niveaux topologiques pour usage externe.
+ *
+ * @param {Array<{id: *}>} nodes
+ * @param {Array<{from: *, to: *}>} edges
+ * @returns {Map<*, number>}
+ */
+export function computeLevels(nodes, edges) {
+  return _computeLevels(nodes, edges);
+}
+
+/**
+ * Variante "gravité" : tout nœud de niveau 0 dont TOUS les enfants directs
+ * sont au niveau ≥ 2 descend au niveau (min_enfant_direct - 1).
+ *
+ * @param {Array<{id: *}>} nodes
+ * @param {Array<{from: *, to: *}>} edges
+ * @returns {Map<*, number>}
+ */
+export function computeGravityLevels(nodes, edges) {
+  const levelMap = _computeLevels(nodes, edges);
+
+  const childrenOf = new Map(nodes.map(n => [n.id, []]));
+  for (const e of edges) {
+    if (childrenOf.has(e.from)) childrenOf.get(e.from).push(e.to);
+  }
+
+  for (const n of nodes) {
+    if ((levelMap.get(n.id) ?? 0) !== 0) continue;
+    const children = childrenOf.get(n.id) ?? [];
+    if (children.length === 0) continue;
+    const childLevels = children.map(c => levelMap.get(c) ?? 0);
+    const minChildLevel = Math.min(...childLevels);
+    if (minChildLevel >= 2) {
+      levelMap.set(n.id, minChildLevel - 1);
+    }
+  }
+
+  return levelMap;
+}
+
+export function layoutDAG(nodes, edges, options) {
   if (!nodes.length) return new Map();
 
-  const levelMap    = _computeLevels(nodes, edges);
+  const levelMap    = (options && options.levelMap) ?? _computeLevels(nodes, edges);
   const components  = _computeComponents(nodes, edges);
   components.sort((a, b) => b.length - a.length); // plus grande en premier
 
