@@ -44,7 +44,7 @@
         registres: { Vertices: 'Vertex', Formae: 'Forma' },
         type: 'SEED',
         graph: {
-          xyzwh: { x: 1200, y: 1200 },
+          xyzwh: { x: 600, y: 600 },
           seed:  { seed, kyklos, radius, ellipse, delta },
           limes: { quadro: false },
         },
