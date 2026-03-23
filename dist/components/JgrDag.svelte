@@ -30,7 +30,7 @@
 
   // ── Compute DAG level for each step (optionally with gravity law) ──────
   const levelMap = $derived.by(() => {
-    const nodes = visibleSteps.map(s => ({ id: s.id }));
+    const nodes = visibleSteps.map(s => ({ id: s.id, isSpine: s.isSpine ?? false }));
     const edges = visibleSteps.flatMap(s =>
       s.dependsOnSteps.map(dep => ({ from: dep, to: s.id }))
     );
