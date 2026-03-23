@@ -60,6 +60,14 @@
             viaKyklos:      null,
             _kyklosTracker: {},
             computeSeed:    true,
+            onComputeSeed:  (biblio, params) => {
+              const { undae, extra } = biblio.Unda.strategy({
+                Vertex: biblio.Vertex, Rosa: biblio.Rosa,
+                ...params,
+              })
+              biblio.undae = undae
+              biblio.extra = extra
+            },
           }
         },
       })
