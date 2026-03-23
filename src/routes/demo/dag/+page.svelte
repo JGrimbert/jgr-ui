@@ -7,14 +7,19 @@
   let activeIds: number[] = $state([]);
 
   // ── Mock DAG — illustre la loi de gravité ────────────────────────────────────
-  // Sans gravité : 1, 9, 10 sont tous en L0
-  // Avec gravité :
-  //   9 (seul enfant = 3 en L2) → descend en L1
-  //   10 (seul enfant = 4 en L3) → descend en L2
-  //   1 (enfant = 2 en L1, <2) → reste en L0
+  // Sans gravité : 1, 9, 10, 11 sont tous en L0
+  // Avec gravité (mono-passe ancienne) :
+  //   9  (enfant = 3 en L2)  → L1
+  //   10 (enfant = 4 en L3)  → L2
+  //   11 (enfant = 12 en L1) → bloqué en L0  ← bug corrigé
+  //   1  (enfant = 2 en L1)  → reste L0 (isSpine)
+  //
+  // Avec gravité multi-passes (nouvelle) :
+  //   Pass 1 : 12 (L1, enfant=13 en L4) → tombe en L3
+  //   Pass 2 : 11 (L0, enfant=12 en L3) → tombe en L2  ← cascade !
   const dagMock: RoadmapData = {
     steps: [
-      { id: 1,  label: 'CoreService',   skill: 'domain',      nodes: ['CoreService'],   files: [], rationale: 'Racine — enfant direct en L1 → reste en L0 même avec gravité',   dependsOnSteps: [],       isSpine: true },
+      { id: 1,  label: 'CoreService',   skill: 'domain',      nodes: ['CoreService'],   files: [], rationale: 'Racine — isSpine → jamais déplacée par la gravité',               dependsOnSteps: [],       isSpine: true },
       { id: 2,  label: 'DataLayer',     skill: 'domain',      nodes: ['DataLayer'],     files: [], rationale: 'L1',  dependsOnSteps: [1] },
       { id: 3,  label: 'QueryEngine',   skill: 'flow',        nodes: ['QueryEngine'],   files: [], rationale: 'L2',  dependsOnSteps: [2, 9] },
       { id: 4,  label: 'ApiGateway',    skill: 'api',         nodes: ['ApiGateway'],    files: [], rationale: 'L3',  dependsOnSteps: [3, 10], isSpine: true },
@@ -22,11 +27,14 @@
       { id: 6,  label: 'EventBus',      skill: 'integration', nodes: ['EventBus'],      files: [], rationale: 'L2',  dependsOnSteps: [2] },
       { id: 7,  label: 'RuleEngine',    skill: 'flow',        nodes: ['RuleEngine'],    files: [], rationale: 'L3',  dependsOnSteps: [5, 6] },
       { id: 8,  label: 'Orchestrator',  skill: 'domain',      nodes: ['Orchestrator'],  files: [], rationale: 'L4',  dependsOnSteps: [4, 7], isSpine: true },
-      { id: 9,  label: 'ConfigLoader',  skill: 'utility',     nodes: ['ConfigLoader'],  files: [], rationale: 'L0 → enfant unique en L2 → gravité : descend en L1', dependsOnSteps: [] },
-      { id: 10, label: 'PluginManager', skill: 'integration', nodes: ['PluginManager'], files: [], rationale: 'L0 → enfant unique en L3 → gravité : descend en L2', dependsOnSteps: [] },
+      { id: 9,  label: 'ConfigLoader',  skill: 'utility',     nodes: ['ConfigLoader'],  files: [], rationale: 'L0 → enfant unique en L2 → gravité : L1', dependsOnSteps: [] },
+      { id: 10, label: 'PluginManager', skill: 'integration', nodes: ['PluginManager'], files: [], rationale: 'L0 → enfant unique en L3 → gravité : L2', dependsOnSteps: [] },
+      { id: 11, label: 'BranchRoot',    skill: 'entrypoint',  nodes: ['BranchRoot'],    files: [], rationale: 'L0 → cascade : enfant #12 tombe d\'abord → #11 tombe ensuite', dependsOnSteps: [] },
+      { id: 12, label: 'BridgeNode',    skill: 'flow',        nodes: ['BridgeNode'],    files: [], rationale: 'L1 → enfant #13 en L4 → gravité : L3', dependsOnSteps: [11] },
+      { id: 13, label: 'DeepTarget',    skill: 'utility',     nodes: ['DeepTarget'],    files: [], rationale: 'L4 — cible profonde partagée', dependsOnSteps: [12, 4] },
     ],
     spine: ['CoreService', 'ApiGateway', 'Orchestrator'],
-    stats: { nodes: 10, edges: 10, levels: 5, steps: 10 },
+    stats: { nodes: 13, edges: 13, levels: 5, steps: 13 },
   };
 
   function toggleNode(id: number) {
@@ -58,12 +66,13 @@
     <aside class="legend">
       <h3 class="legend-title">Loi de gravité</h3>
       <p class="legend-desc">
-        Tout nœud <strong>L0</strong> dont <em>tous</em> les enfants directs sont en
-        <strong>L≥2</strong> descend au niveau <code>min(enfants) − 1</code>.
+        Tout nœud non-spine dont tous ses enfants directs sont à
+        <strong>2+ niveaux</strong> en dessous de lui descend au niveau
+        <code>min(enfants) − 1</code>, en <em>cascade</em> jusqu'à convergence.
       </p>
 
       <div class="legend-section">
-        <span class="legend-tag tag-gravity">Candidats gravité</span>
+        <span class="legend-tag tag-gravity">Gravité directe</span>
         <ul class="node-list">
           <li>
             <button
@@ -91,7 +100,35 @@
       </div>
 
       <div class="legend-section">
-        <span class="legend-tag tag-stable">Reste en L0</span>
+        <span class="legend-tag tag-cascade">Cascade (2 passes)</span>
+        <ul class="node-list">
+          <li>
+            <button
+              class="node-btn"
+              class:selected={activeIds.includes(12)}
+              onclick={() => toggleNode(12)}
+            >
+              <span class="node-id">12</span>
+              <span class="node-name">BridgeNode</span>
+            </button>
+            <span class="node-rule">L1 → L3 (enfant #13 en L4)</span>
+          </li>
+          <li>
+            <button
+              class="node-btn"
+              class:selected={activeIds.includes(11)}
+              onclick={() => toggleNode(11)}
+            >
+              <span class="node-id">11</span>
+              <span class="node-name">BranchRoot</span>
+            </button>
+            <span class="node-rule">L0 → L2 (après chute de #12)</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="legend-section">
+        <span class="legend-tag tag-stable">Ancré (isSpine)</span>
         <ul class="node-list">
           <li>
             <button
@@ -102,7 +139,7 @@
               <span class="node-id">1</span>
               <span class="node-name">CoreService ◉</span>
             </button>
-            <span class="node-rule">enfant #2 en L1 &lt; 2</span>
+            <span class="node-rule">spine → ne tombe jamais</span>
           </li>
         </ul>
       </div>
@@ -214,8 +251,9 @@
   border-radius: 2px;
   display: inline-block;
 }
-.tag-gravity { background: #1a1430; color: #9181f9; border: 1px solid #4d3fa0; }
-.tag-stable  { background: #1a1a10; color: #888; border: 1px solid #333; }
+.tag-gravity  { background: #1a1430; color: #9181f9; border: 1px solid #4d3fa0; }
+.tag-cascade  { background: #1a2010; color: #7cc47a; border: 1px solid #2a5028; }
+.tag-stable   { background: #1a1a10; color: #888; border: 1px solid #333; }
 
 .node-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
 .node-btn {
