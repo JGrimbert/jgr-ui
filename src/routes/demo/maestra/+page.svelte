@@ -44,12 +44,11 @@
         registres: { Vertices: 'Vertex', Formae: 'Forma' },
         type: 'SEED',
         graph: (b) => {
-          const struo = b.Folia.nova({ seed, ideal: { radius } }, true)
           b.graph = {
             xyz:            { x: 600, y: 600 },
             w:              1,
             h:              1,
-            struo,
+            struo: b.Folia.nova({ seed, ideal: { radius } }, true),
             kyklos,
             size:           kyklos,
             radius,
