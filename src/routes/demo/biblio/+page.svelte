@@ -21,11 +21,12 @@
   ]
 
   // ── Formulaire ───────────────────────────────────────────────────────────────
-  let seedStr  = $state('4,4,4,4')
-  let kyklos   = $state(3)
-  let radius   = $state(100)
-  let delta    = $state(0)
-  let ellipse  = $state(1)
+  let seedStr     = $state('4,4,4,4')
+  let kyklos      = $state(3)
+  let radius      = $state(100)
+  let delta       = $state(0)
+  let ellipse     = $state(1)
+  let debugClavis = $state('')
 
   function applyPreset(i: number) {
     const p = PRESETS[i].params
@@ -62,6 +63,7 @@
         ellipse,
         xyz: { x: 600, y: 600 },
         nova: true,
+        debug: debugClavis ? { debugClavis } : null,
       }
 
       biblio = new Biblio(params).init({})
@@ -85,7 +87,7 @@
 
   // ── Réactivité : relance à chaque changement de formulaire ──────────────────
   $effect(() => {
-    void seedStr; void kyklos; void radius; void delta; void ellipse
+    void seedStr; void kyklos; void radius; void delta; void ellipse; void debugClavis
     run()
   })
 </script>
@@ -135,6 +137,12 @@
       <label class="form-label" for="ellipse">ellipse</label>
       <input id="ellipse" class="form-input form-input--num" type="number" step="0.01" min="0.1"
              bind:value={ellipse} />
+    </section>
+
+    <section class="form-section">
+      <label class="form-label" for="debugClavis">debugClavis</label>
+      <input id="debugClavis" class="form-input" bind:value={debugClavis} placeholder="ex: @A" />
+      <span class="form-hint">clavis ciblée — vide = off</span>
     </section>
 
     {#if error}

@@ -43,12 +43,26 @@
       biblio = await createBiblio({
         registres: { Vertices: 'Vertex', Formae: 'Forma' },
         type: 'SEED',
-        graph: {
-          xyzwh: { x: 600, y: 600 },
-          seed:  { seed, kyklos, radius, ellipse, delta },
-          limes: { quadro: false },
+        graph: (b) => {
+          const struo = b.Folia.nova({ seed, ideal: { radius } }, true)
+          b.graph = {
+            xyz:            { x: 600, y: 600 },
+            w:              1,
+            h:              1,
+            struo,
+            kyklos,
+            size:           kyklos,
+            radius,
+            ellipse,
+            delta,
+            quadro:         false,
+            configMotiva:   null,
+            viaForma:       null,
+            viaKyklos:      null,
+            _kyklosTracker: {},
+            computeSeed:    true,
+          }
         },
-        computeSeed: true,
       })
 
       const dt      = (performance.now() - t0).toFixed(1)
