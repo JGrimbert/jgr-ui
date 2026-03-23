@@ -19,15 +19,17 @@ export function computeLevels(nodes: Array<{
     to: any;
 }>): Map<any, number>;
 /**
- * Variante "gravité" : tout nœud de niveau 0 dont TOUS les enfants directs
- * sont au niveau ≥ 2 descend au niveau (min_enfant_direct - 1).
+ * Variante "gravité" multi-passes : tout nœud non-spine dont tous les enfants
+ * directs sont à 2+ niveaux en dessous de lui descend, en cascade jusqu'à
+ * convergence. La garde parentale préserve l'ordre topologique.
  *
- * @param {Array<{id: *}>} nodes
+ * @param {Array<{id: *, isSpine?: boolean}>} nodes
  * @param {Array<{from: *, to: *}>} edges
  * @returns {Map<*, number>}
  */
 export function computeGravityLevels(nodes: Array<{
     id: any;
+    isSpine?: boolean;
 }>, edges: Array<{
     from: any;
     to: any;
