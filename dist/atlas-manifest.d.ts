@@ -32,6 +32,7 @@ export type ListItem = {
     }[];
     issues?: number[];
     dimmed?: boolean;
+    loading?: boolean;
     actionLabel?: string;
     actionLoading?: boolean;
     actionDone?: boolean;
