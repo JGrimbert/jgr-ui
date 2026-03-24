@@ -9,6 +9,8 @@ export type ListItem = {
     }[];
     issues?: number[];
     dimmed?: boolean;
+    loading?: boolean;
+    description?: string;
     actionLabel?: string;
     actionLoading?: boolean;
     actionDone?: boolean;

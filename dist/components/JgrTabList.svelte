@@ -10,6 +10,8 @@
     labels?: { name: string; color: string }[];
     issues?: number[];
     dimmed?: boolean;
+    loading?: boolean;
+    description?: string;
     actionLabel?: string;
     actionLoading?: boolean;
     actionDone?: boolean;
@@ -78,13 +80,27 @@
     ontabchange?.(id);
   }
 
-  const rows = $derived(
-    !q.trim()
+  const ql = $derived(q.toLowerCase().trim());
+
+  const titleRows = $derived(
+    !ql
       ? (current?.items ?? [])
       : (current?.items ?? []).filter(item =>
-          item.label.toLowerCase().includes(q.toLowerCase()) ||
-          String(item.prefix ?? '').toLowerCase().includes(q.toLowerCase())
+          item.label.toLowerCase().includes(ql) ||
+          String(item.prefix ?? '').toLowerCase().includes(ql)
         )
+  );
+
+  const descOnlyRows = $derived(
+    !ql
+      ? []
+      : (() => {
+          const ids = new Set(titleRows.map(i => i.id));
+          return (current?.items ?? []).filter(item =>
+            !ids.has(item.id) &&
+            !!item.description?.toLowerCase().includes(ql)
+          );
+        })()
   );
 </script>
 
@@ -127,11 +143,11 @@
         <div class="tl-loading">
           <span class="tl-load-spin">{FRAMES[loadFrame]}</span>
         </div>
-      {:else if rows.length === 0}
+      {:else if titleRows.length === 0 && descOnlyRows.length === 0}
         <p class="tl-hint">{current.empty ?? (q ? 'Aucun résultat' : 'Vide')}</p>
       {:else}
-        {#each rows as item}
-          <div class="tl-row" class:dimmed={item.dimmed} class:tl-row--with-close={!!item.onclose} class:tl-row--selected={current.selectedId === item.id}>
+        {#each titleRows as item}
+          <div class="tl-row" class:dimmed={item.dimmed} class:tl-row--with-close={!!item.onclose || !!item.loading} class:tl-row--selected={current.selectedId === item.id}>
             <JgrItem
               prefix={item.prefix}
               title={item.label}
@@ -154,6 +170,8 @@
                 disabled={item.onclose.loading || item.onclose.done}
                 title="Fermer"
               >{item.onclose.done ? '✓' : item.onclose.loading ? '…' : '✕'}</button>
+            {:else if item.loading}
+              <span class="tl-del tl-del-vis tl-del-pending">…</span>
             {/if}
             {#if item.onaction && item.actionHoverOnly}
               <button
@@ -169,6 +187,50 @@
             {@render detail(currentId, item.id)}
           {/if}
         {/each}
+        {#if descOnlyRows.length > 0}
+          <div class="tl-desc-sep">dans les descriptions</div>
+          {#each descOnlyRows as item}
+            <div class="tl-row tl-row--desc" class:dimmed={item.dimmed} class:tl-row--with-close={!!item.onclose || !!item.loading} class:tl-row--selected={current.selectedId === item.id}>
+              <JgrItem
+                prefix={item.prefix}
+                title={item.label}
+                labels={item.labels}
+                issues={item.issues}
+                state={current.selectedId === item.id ? 'selected' : 'default'}
+                actionLabel={item.actionHoverOnly ? undefined : item.actionLabel}
+                actionLoading={item.actionLoading}
+                actionDone={item.actionDone}
+                onaction={item.actionHoverOnly ? undefined : item.onaction}
+                onselect={() => onselect?.(currentId, item)}
+                onissueclick={onissueclick}
+              />
+              {#if item.onclose}
+                <button
+                  class="tl-del"
+                  class:tl-del-done={item.onclose.done}
+                  class:tl-del-vis={item.onclose.loading || item.onclose.done}
+                  onclick={(e) => { e.stopPropagation(); item.onclose!.handler(); }}
+                  disabled={item.onclose.loading || item.onclose.done}
+                  title="Fermer"
+                >{item.onclose.done ? '✓' : item.onclose.loading ? '…' : '✕'}</button>
+              {:else if item.loading}
+                <span class="tl-del tl-del-vis tl-del-pending">…</span>
+              {/if}
+              {#if item.onaction && item.actionHoverOnly}
+                <button
+                  class="tl-act"
+                  class:tl-act-done={item.actionDone}
+                  onclick={(e) => { e.stopPropagation(); item.onaction!(); }}
+                  disabled={item.actionLoading || item.actionDone}
+                  title={item.actionLabel ?? "→"}
+                >{item.actionDone ? '✓' : item.actionLoading ? '…' : '→'}</button>
+              {/if}
+            </div>
+            {#if current.selectedId === item.id && detail}
+              {@render detail(currentId, item.id)}
+            {/if}
+          {/each}
+        {/if}
       {/if}
     </div>
 
@@ -312,7 +374,19 @@
 .tl-del:hover:not(:disabled) { color: #f44336; }
 .tl-del-done { color: #3a8a3a; cursor: default; }
 .tl-del:disabled { cursor: default; }
+.tl-del-pending { pointer-events: none; color: #888; cursor: default; }
 .tl-hint { padding: 1rem; color: #333; font-size: 0.8rem; }
+.tl-desc-sep {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.52rem;
+  color: #3a3a4a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.6rem 0.2rem;
+  border-top: 1px solid var(--border, #222);
+  margin-top: 0.15rem;
+}
+.tl-row--desc { opacity: 0.6; }
 .tl-loading {
   display: flex;
   align-items: center;

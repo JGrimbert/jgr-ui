@@ -34,6 +34,7 @@ export type ListItem = {
   labels?: { name: string; color: string }[];
   issues?: number[];
   dimmed?: boolean;
+  loading?: boolean;
   actionLabel?: string;
   actionLoading?: boolean;
   actionDone?: boolean;
