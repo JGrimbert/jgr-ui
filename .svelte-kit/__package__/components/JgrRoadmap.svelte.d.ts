@@ -34,6 +34,10 @@ export type IssueCluster = {
     issues: number[];
     score: number;
     hasParent: boolean;
+    subdivisions?: {
+        keyword: string;
+        issues: number[];
+    }[];
 };
 type $$ComponentProps = {
     roadmap?: RoadmapData;

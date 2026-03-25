@@ -33,6 +33,7 @@
     issues: number[];
     score: number;
     hasParent: boolean;
+    subdivisions?: { keyword: string; issues: number[] }[];
   };
 
   const SKILL_COLOR: Record<string, string> = {
@@ -262,7 +263,7 @@
     return [
       { id: 'tasks',    label: 'Tasks',    items: taskItems,    empty: 'Aucun step lié à des issues' },
       { id: 'steps',    label: 'Steps',    items: stepItems,    empty: 'Aucun step' },
-      { id: 'clusters', label: 'Clusters', items: clusterItems, empty: 'Aucun cluster détecté' },
+      { id: 'clusters', label: 'Clusters' },
     ];
   });
 
@@ -308,8 +309,13 @@
     void activeTab; // seule dépendance voulue
     selectedItemId = null;
     activeIds = [];
-    const currentTab = untrack(() => tabs).find(t => t.id === activeTab);
-    const tabIssues = [...new Set((currentTab?.items ?? []).flatMap((item: any) => item.issues ?? []))];
+    let tabIssues: number[];
+    if (activeTab === 'clusters') {
+      tabIssues = [...new Set((clusters ?? []).flatMap(c => c.issues))];
+    } else {
+      const currentTab = untrack(() => tabs).find(t => t.id === activeTab);
+      tabIssues = [...new Set((currentTab?.items ?? []).flatMap((item: any) => item.issues ?? []))];
+    }
     ontabchange?.(tabIssues);
     // STEPS et CLUSTERS n'ont pas de vue unifiée → basculer automatiquement en vue fragmentée
     if (activeTab === 'steps' || activeTab === 'clusters') {
@@ -401,7 +407,54 @@
         ontabchange={id => activeTab = id}
         onselect={handleSelect}
         onissueclick={handleIssueClick}
-      />
+      >
+        {#snippet customcontent(tabId)}
+          {#if tabId === 'clusters'}
+            <div class="cl-list">
+              {#if !(clusters ?? []).length}
+                <p class="cl-empty">Aucun cluster détecté</p>
+              {/if}
+              {#each clusters ?? [] as c}
+                {@const itemId = `cluster-${c.keyword}`}
+                {@const isSelected = selectedItemId === itemId}
+                <div
+                  class="cl-card"
+                  class:cl-selected={isSelected}
+                  role="button"
+                  tabindex="0"
+                  onclick={() => handleSelect('clusters', { id: itemId, label: c.keyword, issues: c.issues })}
+                  onkeydown={(e) => e.key === 'Enter' && handleSelect('clusters', { id: itemId, label: c.keyword, issues: c.issues })}
+                >
+                  <div class="cl-head">
+                    <span class="cl-count">{c.issues.length}</span>
+                    <span class="cl-kw">{c.keyword}</span>
+                    {#if c.keywords.length > 1}
+                      <span class="cl-extra">+{c.keywords.slice(1, 3).join(', ')}</span>
+                    {/if}
+                  </div>
+                  {#if (c.subdivisions ?? []).length > 0}
+                    <div class="cl-subs">
+                      {#each c.subdivisions as sub, i}
+                        <div class="cl-sub-box" style="--sub-hue: {(i * 60) % 360}">
+                          <div class="cl-sub-head">
+                            <span class="cl-sub-kw">{sub.keyword}</span>
+                            <span class="cl-sub-count">{sub.issues.length}</span>
+                          </div>
+                          <div class="cl-sub-issues">
+                            {#each sub.issues as n}
+                              <button class="cl-issue-num" onclick={(e) => { e.stopPropagation(); onissueclick?.(n); }}>#{n}</button>
+                            {/each}
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        {/snippet}
+      </JgrTabList>
     {/snippet}
   </JgrLayout>
 </div>
@@ -522,4 +575,103 @@
   font-size: inherit;
   margin-left: 0.5rem;
 }
+
+/* ── Clusters custom list ── */
+.cl-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem 0.5rem;
+}
+.cl-list::-webkit-scrollbar { width: 4px; }
+.cl-list::-webkit-scrollbar-track { background: transparent; }
+.cl-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.cl-empty { color: var(--text-muted, #555); font-size: 0.62rem; padding: 0.4rem 0; margin: 0; }
+.cl-card {
+  border: 1px solid var(--border, #333);
+  border-radius: 3px;
+  padding: 0.3rem 0.4rem;
+  cursor: pointer;
+  background: var(--bg-panel, #0e0e1a);
+  transition: border-color 0.1s;
+}
+.cl-card:hover { border-color: #3a3a5a; }
+.cl-selected { border-color: #5a4a9a !important; background: #0d0a20; }
+.cl-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
+}
+.cl-count {
+  font-size: 0.55rem;
+  color: var(--text-muted, #555);
+  min-width: 1.2rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+.cl-kw {
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: #9181f9;
+  font-family: 'JetBrains Mono', monospace;
+}
+.cl-selected .cl-kw { color: #c07af9; }
+.cl-extra {
+  font-size: 0.55rem;
+  color: var(--text-muted, #555);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cl-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.1rem;
+}
+.cl-sub-box {
+  border: 1px dashed hsl(calc(var(--sub-hue, 0) * 1deg) 28% 32%);
+  border-radius: 2px;
+  padding: 0.15rem 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.cl-sub-head {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.15rem;
+}
+.cl-sub-kw {
+  font-size: 0.58rem;
+  color: #7a6ad9;
+  font-family: 'JetBrains Mono', monospace;
+  flex: 1;
+}
+.cl-sub-count {
+  font-size: 0.52rem;
+  color: #555;
+  flex-shrink: 0;
+}
+.cl-sub-issues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+.cl-issue-num {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #5a8a5a;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.cl-issue-num:hover { color: #7aba7a; text-decoration: underline; }
 </style>
