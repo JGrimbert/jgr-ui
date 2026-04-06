@@ -1,0 +1,56 @@
+import type { Snippet } from 'svelte';
+export type ListItem = {
+    id: string;
+    label: string;
+    prefix?: string | number;
+    labels?: {
+        name: string;
+        color: string;
+    }[];
+    issues?: number[];
+    dimmed?: boolean;
+    loading?: boolean;
+    description?: string;
+    actionLabel?: string;
+    actionLoading?: boolean;
+    actionDone?: boolean;
+    onaction?: () => void;
+    actionHoverOnly?: boolean;
+    onclose?: {
+        handler: () => void;
+        loading?: boolean;
+        done?: boolean;
+    };
+};
+export type TabDef = {
+    id: string;
+    label: string;
+    /** Undefined = onglet à contenu libre (customcontent snippet) */
+    items?: ListItem[];
+    /** Id de l'item sélectionné — affiche le snippet detail en-dessous */
+    selectedId?: string;
+    cta?: {
+        label: string;
+        onclick: () => void;
+    };
+    /** Toute la liste passe en stale (opacité réduite, interactions bloquées) */
+    pending?: boolean;
+    /** Label affiché sur le JgrCta pending. Défaut : "En cours" */
+    pendingLabel?: string;
+    loading?: boolean;
+    empty?: string;
+};
+type $$ComponentProps = {
+    tabs: TabDef[];
+    activeTab?: string;
+    ontabchange?: (id: string) => void;
+    onselect?: (tabId: string, item: ListItem) => void;
+    onissueclick?: (n: number) => void;
+    /** Snippet rendu inline sous l'item sélectionné : (tabId, itemId) */
+    detail?: Snippet<[string, string]>;
+    /** Snippet rendu pour un onglet sans items : (tabId) */
+    customcontent?: Snippet<[string]>;
+};
+declare const JgrTabList: import("svelte").Component<$$ComponentProps, {}, "">;
+type JgrTabList = ReturnType<typeof JgrTabList>;
+export default JgrTabList;

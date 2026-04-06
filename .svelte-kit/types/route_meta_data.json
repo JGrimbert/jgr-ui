@@ -1,0 +1,13 @@
+{
+	"/": [],
+	"/demo": [],
+	"/demo/biblio": [
+		"src/routes/demo/biblio/+page.ts"
+	],
+	"/demo/dag": [
+		"src/routes/demo/dag/+page.ts"
+	],
+	"/demo/maestra": [
+		"src/routes/demo/maestra/+page.ts"
+	]
+}
